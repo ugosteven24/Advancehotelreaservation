@@ -1,0 +1,315 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.refund-page {
+
+    min-height: 100vh;
+    padding: 30px;
+    background: #f4f6f9;
+}
+
+/* Header */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.page-header h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.page-header p {
+    margin-top: 5px;
+    font-size: 15px;
+    color: #6b7280;
+}
+
+/* Toolbar */
+
+.toolbar {
+    margin-bottom: 20px;
+}
+
+.search-box {
+    width: 350px;
+    max-width: 100%;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 15px;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+}
+
+.search-box svg {
+    color: #6b7280;
+}
+
+.search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 15px;
+}
+
+/* Table */
+
+.table-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    overflow-x: auto;
+    box-shadow: 0 3px 12px rgba(0,0,0,.08);
+}
+
+table {
+    width: 100%;
+    min-width: 1350px;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f8fafc;
+}
+
+thead th {
+    padding: 18px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+tbody td {
+    padding: 18px;
+    font-size: 14px;
+    color: #374151;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* Status */
+
+.pending,
+.approved,
+.rejected,
+.refunded {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 95px;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.approved {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.rejected {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.refunded {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* Actions */
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.view,
+.approve,
+.reject,
+.refund-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    transition: .3s;
+}
+
+.view {
+    background: #2563eb;
+}
+
+.view:hover {
+    background: #1d4ed8;
+}
+
+.approve {
+    background: #16a34a;
+}
+
+.approve:hover {
+    background: #15803d;
+}
+
+.reject {
+    background: #dc2626;
+}
+
+.reject:hover {
+    background: #b91c1c;
+}
+
+.refund-btn {
+    background: #7c3aed;
+    cursor: default;
+}
+
+.refund-btn:disabled {
+    opacity: .75;
+}
+
+/* Empty Table */
+
+tbody td[colspan] {
+    text-align: center;
+    padding: 45px;
+    color: #6b7280;
+    font-size: 15px;
+}
+
+/* Scrollbar */
+
+.table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: #f3f4f6;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 20px;
+}
+
+/* Responsive */
+
+@media (max-width: 992px) {
+
+    .refund-page {
+        padding: 20px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-box {
+        width: 100%;
+    }
+
+    table {
+        min-width: 1200px;
+    }
+
+}
+
+@media (max-width: 768px) {
+
+    .refund-page {
+        padding: 15px;
+    }
+
+    .page-header h1 {
+        font-size: 24px;
+    }
+
+    .page-header p {
+        font-size: 14px;
+    }
+
+    thead th,
+    tbody td {
+        padding: 14px;
+    }
+
+    .view,
+    .approve,
+    .reject,
+    .refund-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+}
+
+@media (max-width: 480px) {
+
+    .page-header h1 {
+        font-size: 22px;
+    }
+
+    .search-box input {
+        font-size: 14px;
+    }
+
+    .pending,
+    .approved,
+    .rejected,
+    .refunded {
+        min-width: 75px;
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+
+    .actions {
+        gap: 5px;
+    }
+
+    .view,
+    .approve,
+    .reject,
+    .refund-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+    }
+
+}

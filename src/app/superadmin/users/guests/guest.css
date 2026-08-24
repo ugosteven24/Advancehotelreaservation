@@ -1,0 +1,286 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.guest-page {
+
+    min-height: 100vh;
+    padding: 30px;
+    background: #f4f6f9;
+}
+
+/* Header */
+
+.page-header {
+    margin-bottom: 25px;
+}
+
+.page-header h1 {
+    font-size: 30px;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.page-header p {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 15px;
+}
+
+/* Toolbar */
+
+.toolbar {
+    margin-bottom: 20px;
+}
+
+.search-box {
+    width: 350px;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0 15px;
+}
+
+.search-box svg {
+    color: #6b7280;
+}
+
+.search-box input {
+    flex: 1;
+    height: 45px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 15px;
+}
+
+/* Table */
+
+.table-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    overflow-x: auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+}
+
+table {
+    width: 100%;
+    min-width: 1100px;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f8fafc;
+}
+
+thead th {
+    padding: 18px;
+    text-align: left;
+    font-size: 14px;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+tbody td {
+    padding: 18px;
+    font-size: 14px;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+tbody tr:hover {
+    background: #fafafa;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Avatar */
+
+.avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e5e7eb;
+}
+
+/* Status */
+
+.active,
+.blocked {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.blocked {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Actions */
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.actions a,
+.actions button {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: .3s;
+    font-size: 15px;
+}
+
+.view {
+    background: #2563eb;
+}
+
+.view:hover {
+    background: #1d4ed8;
+}
+
+.status {
+    background: #f59e0b;
+}
+
+.status:hover {
+    background: #d97706;
+}
+
+.delete {
+    background: #ef4444;
+}
+
+.delete:hover {
+    background: #dc2626;
+}
+
+/* Empty */
+
+tbody td[colspan] {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+}
+
+/* Scrollbar */
+
+.table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* Responsive */
+
+@media (max-width: 992px) {
+
+    .guest-page {
+        padding: 20px;
+    }
+
+    .search-box {
+        width: 100%;
+    }
+
+    table {
+        min-width: 950px;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .guest-page {
+        padding: 15px;
+    }
+
+    .page-header h1 {
+        font-size: 24px;
+    }
+
+    .page-header p {
+        font-size: 14px;
+    }
+
+    thead th,
+    tbody td {
+        padding: 14px;
+    }
+
+    .avatar {
+        width: 45px;
+        height: 45px;
+    }
+
+    .actions a,
+    .actions button {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .page-header h1 {
+        font-size: 22px;
+    }
+
+    .search-box input {
+        font-size: 14px;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .active,
+    .blocked {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+
+    .actions {
+        gap: 6px;
+    }
+
+    .actions a,
+    .actions button {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+    }
+}

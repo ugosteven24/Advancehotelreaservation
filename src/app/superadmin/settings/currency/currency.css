@@ -1,0 +1,350 @@
+.currency-page{
+    padding:30px;
+    background:#f6f8fb;
+    min-height:100vh;
+}
+
+/* ==========================================
+   Header
+========================================== */
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+}
+
+.page-header h1{
+    font-size:30px;
+    color:#122d22;
+    margin-bottom:6px;
+}
+
+.page-header p{
+    color:#777;
+    font-size:14px;
+}
+
+/* ==========================================
+   Back Button
+========================================== */
+
+.back-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+
+    text-decoration:none;
+
+    background:#fff;
+
+    color:#122d22;
+
+    padding:12px 22px;
+
+    border:1px solid #ddd;
+
+    border-radius:10px;
+
+    font-weight:600;
+
+    transition:.3s;
+}
+
+.back-btn:hover{
+    background:#122d22;
+    color:#fff;
+}
+
+/* ==========================================
+   Form
+========================================== */
+
+.currency-form{
+    display:flex;
+    flex-direction:column;
+    gap:25px;
+}
+
+/* ==========================================
+   Cards
+========================================== */
+
+.settings-card{
+    background:#fff;
+    border-radius:16px;
+    padding:30px;
+    box-shadow:0 8px 24px rgba(0,0,0,.05);
+}
+
+.settings-card h3{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    margin-bottom:25px;
+
+    padding-bottom:15px;
+
+    border-bottom:1px solid #eee;
+
+    color:#122d22;
+
+    font-size:20px;
+}
+
+/* ==========================================
+   Grid
+========================================== */
+
+.grid-2{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+}
+
+/* ==========================================
+   Form Controls
+========================================== */
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    margin-bottom:20px;
+}
+
+.form-group:last-child{
+    margin-bottom:0;
+}
+
+.form-group label{
+    margin-bottom:8px;
+    font-size:14px;
+    font-weight:600;
+    color:#444;
+}
+
+.form-group input,
+.form-group select{
+    width:100%;
+
+    padding:14px 16px;
+
+    border:1px solid #d9d9d9;
+
+    border-radius:10px;
+
+    outline:none;
+
+    background:#fff;
+
+    font-size:15px;
+
+    transition:.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus{
+    border-color:#49c98a;
+    box-shadow:0 0 0 4px rgba(73,201,138,.15);
+}
+
+/* ==========================================
+   Switch
+========================================== */
+
+.switch-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:18px 0;
+
+    border-bottom:1px solid #eee;
+}
+
+.switch-row:last-child{
+    border-bottom:none;
+}
+
+.switch-row h4{
+    margin-bottom:5px;
+    color:#222;
+    font-size:16px;
+}
+
+.switch-row p{
+    color:#777;
+    font-size:14px;
+}
+
+.switch-row input{
+    width:22px;
+    height:22px;
+    cursor:pointer;
+    accent-color:#49c98a;
+}
+
+/* ==========================================
+   Currency Checkbox Grid
+========================================== */
+
+.checkbox-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:15px;
+}
+
+.checkbox-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    padding:14px 16px;
+
+    background:#f8fafc;
+
+    border:1px solid #e6e6e6;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.3s;
+}
+
+.checkbox-item:hover{
+    background:#eefbf5;
+    border-color:#49c98a;
+}
+
+.checkbox-item input{
+    width:18px;
+    height:18px;
+    accent-color:#49c98a;
+}
+
+.checkbox-item span{
+    font-weight:600;
+    color:#333;
+}
+
+/* ==========================================
+   Save Button
+========================================== */
+
+.form-actions{
+    display:flex;
+    justify-content:flex-end;
+}
+
+.save-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+
+    padding:15px 34px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    color:#fff;
+
+    font-size:15px;
+    font-weight:600;
+
+    background:linear-gradient(135deg,#122d22,#49c98a);
+
+    transition:.3s;
+}
+
+.save-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 25px rgba(18,45,34,.18);
+}
+
+.save-btn:disabled{
+    opacity:.7;
+    cursor:not-allowed;
+}
+
+/* ==========================================
+   Tablet
+========================================== */
+
+@media(max-width:992px){
+
+    .page-header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:20px;
+    }
+
+    .grid-2{
+        grid-template-columns:1fr;
+    }
+
+    .settings-card{
+        padding:24px;
+    }
+
+}
+
+/* ==========================================
+   Mobile
+========================================== */
+
+@media(max-width:768px){
+
+    .currency-page{
+        padding:15px;
+    }
+
+    .page-header h1{
+        font-size:24px;
+    }
+
+    .settings-card{
+        padding:20px;
+        border-radius:12px;
+    }
+
+    .settings-card h3{
+        font-size:18px;
+    }
+
+    .form-group input,
+    .form-group select{
+        padding:12px;
+        font-size:14px;
+    }
+
+    .switch-row{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:15px;
+    }
+
+    .checkbox-grid{
+        grid-template-columns:1fr;
+    }
+
+    .back-btn{
+        width:100%;
+    }
+
+    .form-actions{
+        justify-content:stretch;
+    }
+
+    .save-btn{
+        width:100%;
+    }
+
+}

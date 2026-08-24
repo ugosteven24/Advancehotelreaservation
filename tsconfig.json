@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "src/components/alert/Toast.jsx", "src/app/superadmin/AdminLogin/page.jsx", "src/firebase/firebase.jsx", "src/app/superadmin/layout.jsx", "src/app/superadmin/page.jsx", "src/components/superadmin/layout/menu.jsx", "src/lib/cloudinary.jsx", "src/app/page.jsx"  ],
   "exclude": ["node_modules"]
 }
