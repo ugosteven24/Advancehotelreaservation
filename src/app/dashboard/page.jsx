@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import "./dashboard.css";
-
-
+import PopularHotels from "./component/popularhotels"
+import { getUserId  } from "@/lib/session";
 export default function ClientDashboard() {
-const [favorites, setFavorites] = useState([1, 2, 3,4,5]);
+    const [favorites, setFavorites] = useState([1, 2, 3, 4, 5]);
     const [activeMenu, setActiveMenu] = useState("Dashboard");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-
+    const [userId, setUserId] = useState(null);
     const stays = [
         {
             id: 1,
@@ -47,7 +47,7 @@ const [favorites, setFavorites] = useState([1, 2, 3,4,5]);
             image:
                 "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=1000&q=85",
         },
-         {
+        {
             id: 5,
             name: "Verdant Canopy Lodge",
             location: "Arenal, Costa Rica",
@@ -108,14 +108,14 @@ const [favorites, setFavorites] = useState([1, 2, 3,4,5]);
         },
     ];
 
-
+  useEffect(() => {
+    getUserId().then(setUserId);
+  }, []);
     return (
         <>
-
-
-
-
             <header className="client-header">
+
+
 
                 <div>
 
@@ -146,7 +146,7 @@ const [favorites, setFavorites] = useState([1, 2, 3,4,5]);
         =================================================== */}
 
             <section className="dashboard-top">
-               
+
 
 
                 {/* UPCOMING BOOKING */}
@@ -237,37 +237,44 @@ const [favorites, setFavorites] = useState([1, 2, 3,4,5]);
                         </div>
 
 
-                        <div className="booking-details">
-
+                        {/* <div className="booking-details">
                             <div>
                                 <span>Check-in</span>
-                                <strong>
-                                    {upcomingBooking.checkIn}
-                                </strong>
+                                <input
+                                    type="date"
+                                    value={upcomingBooking.checkIn}
+                                    name="checkIn"
+                                   
+                                />
                             </div>
 
                             <div>
                                 <span>Check-out</span>
-                                <strong>
-                                    {upcomingBooking.checkOut}
-                                </strong>
+                                <input
+                                    type="date"
+                                    value={upcomingBooking.checkOut}
+                                    name="checkOut"
+                                />
                             </div>
 
                             <div>
                                 <span>Guests</span>
-                                <strong>
-                                    {upcomingBooking.guests}
-                                </strong>
+                                <input
+                                    type="number"
+                                    value={upcomingBooking.guests}
+                                    
+                                />
                             </div>
 
                             <div>
                                 <span>Room Type</span>
-                                <strong>
-                                    {upcomingBooking.roomType}
-                                </strong>
+                                <input
+                                    type="text"
+                                    value={upcomingBooking.roomType}
+                                    readOnly
+                                />
                             </div>
-
-                        </div>
+                        </div> */}
 
 
                         <div className="booking-actions">
@@ -374,12 +381,12 @@ const [favorites, setFavorites] = useState([1, 2, 3,4,5]);
             {/* ===================================================
             PAST STAYS
         =================================================== */}
-           
-             
-                    <h2 className="nearbyhotels">Nearby hotels</h2>
-                 
-             
-           
+
+
+            <h2 className="nearbyhotels">Nearby hotels</h2>
+
+
+            <PopularHotels />
             <section className="cards">
                 {stays.map((stay) => {
                     const isFavorite = favorites.includes(stay.id);
@@ -522,6 +529,10 @@ const [favorites, setFavorites] = useState([1, 2, 3,4,5]);
                 </div>
 
             </section>
+
+
+
+
 
         </>
     );

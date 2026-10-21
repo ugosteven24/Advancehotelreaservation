@@ -193,9 +193,7 @@ img {
 .hero-background {
   position: absolute;
   inset: 0;
-
-  background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC3vZoqfmlxQRzkBI3k4S3FmmjbklMDk5ofy9lwymqDsyFxzsPa4rECCH-P2NOZnp1Gw7-YZsNrmx9XALrK7ozYltVGcCR2c50okP66gTI44f54IFprucH89VtSMayvjrkSrNXWIa-FgsR9lkBc2CUXyTg7rLpkctK2gAvn4qKCm1zDT5AMeYlm7YL-0cu4nCUEpRXdiryq2D8sLEJksLbOPeIw2Ss_7GjPeARMI7ltZIZqrz_RRAzOyg");
-
+  background: url(/images/gallery1.jpg);
   background-size: cover;
   background-position: center;
 }

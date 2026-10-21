@@ -13,26 +13,27 @@ import {
 
   FaHistory,
 } from "react-icons/fa";
-
-
+import Image from "next/image";
+import Link from "next/link";
+import PopularHotels from "../components/popularhotel/popularhotels"
+import Menu from "./menu"
 const destinations = [
   {
     name: "Bali, Indonesia",
     properties: "42 Premium Properties",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDzTGSWRi4dziLTQDz7PtdeYileJDNr9e1eWCyj6PsF2QlGThckU57O91lLnTGXBEpoAu8ihbyrCy-H_ZWT2V8cnFNNYKciUEm-DBxA0WcUu8insNnYXIMu7ntSFIdPQwR_oEJ2h7lHQ1GMTGsZwaR8_jMc0UZ2Gd683aW-5n_7d_JVPPK4hXMlvvru7Te66TL2r13uUy0SpiRF0LarB5zIz6oFOt6RSGKGfQ5ypKa8GMLR1fKujZa_tA",
+    image:"/images/gallery1.jpg",
   },
   {
     name: "Paris, France",
     properties: "28 Premium Properties",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCvQgl0-FMKgmdTcHkFe_3rK_DBM_9wJydfQKL8Pj6Jhux4cvv3A9lfq_REkhFAufghG-2RLr9hLZwsdkUoBF1wnInkh2a8amNDGijiIwH91Wexw0FIy6Qmv7avACEjY7RBNbOuw0TLwTncYLRHkLOgOidm2-fZ9RfCDXW-9XcJKLlR6abWdkDumUk0udwbxTs4xi2FWgArniXaeE8T7fE1W_uZXW883Bb62WGYsDc9q5OpHbClLXs-fQ",
+      "/images/gallery2.jpg",
   },
   {
     name: "New York, USA",
     properties: "35 Premium Properties",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCZ3VdB-t7txNzuPJ6Il05Z1ve2QeEr9D5zMEM8t1hDppoEmf6FzPAEsf74ZQdbAJETuZmTInVhEtEJpxjTB6gZKqdl0njuH3bQ4KUKv8fYKhlPQIq4lzK4KH1mvj5Z7Qtf71NRjngLrFhAX-gIxcmkGQ6PO3H9C37tR_Rm6HrliC2OfciTm3byWE_-KFVVKQGZUw3iwtjwWxDQoNLbOtA--hfDHbCRYC6hVage1HmjQ4SSPc2LRm1pxw",
+      "/images/gallery.jpg",
   },
 ];
 
@@ -54,7 +55,7 @@ const properties = [
     rating: "4.9",
     location: "Shinjuku, Tokyo • Luxury Suite • City View",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBfKlwqAi-SYzSlVPqm0_yKx98SfdT5P2Vedk8mtQ8g6NVj8SN2jb8iMEY15IuowVFmxPM9_Cqcvr1jdveXZ4_-UXIP29UOKr8oUDLXV2KFTftg4wMqrQjkZu6V8GLoWR39hh17Mj74waTj88ZUMyL8AvQ_g14DF5Wozli1tWr3ei3LzIjjXpg0tfqAbELDbMZu6KMvh2zlhhIWZu4a5EtDrCpTywBLrKGDs9Zu-eKxW7MrwcWoJoTmfg",
+      "/images/gallery1.jpg",
   },
   {
     name: "Coral Reef Retreat",
@@ -62,7 +63,7 @@ const properties = [
     rating: "5.0",
     location: "North Atoll, Maldives • Overwater Villa • Private Pool",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDvV5FVfU_Q7LjD_RZrod68MqdMF7JA8KHvyyxZqhhxTJhmOzfknzUrMbEQAM3vvJE0hUnE0bzPyxT2amqsWE1F24AjLbg8vEeH5o5iQz_ALQXCg-v22VVdji7v_F7xINyoeIfUpMFDAEf007vDc00zZNe0DQSYJ7h0HEgG9NTsFsfWXwl3b7zDTpUl60wIjOGRzJ5841JkovvPbumQbAVfkPsyWT5y1eFqGb2ME4gUJ4-nDwQnmU57ZQ",
+      "/images/gallery2.jpg",
   },
 ];
 
@@ -92,89 +93,8 @@ export default function Home() {
     <div className="luxestay-page">
 
       {/* ================= NAVBAR ================= */}
-      <nav className="top-navbar">
-
-        <div className="navbar-container">
-
-          <div className="brand">
-            LuxeStay
-          </div>
-
-          <button
-            className="mobile-menu-button"
-            onClick={() => setMobileMenu(!mobileMenu)}
-            aria-label="Toggle navigation"
-          >
-            <span className="material-symbols-outlined">
-              {mobileMenu ? "close" : "menu"}
-            </span>
-          </button>
-
-          <div
-            className={`navigation ${
-              mobileMenu ? "navigation-open" : ""
-            }`}
-          >
-
-            <a
-              href="#explore"
-              className="nav-link active"
-              onClick={() => setMobileMenu(false)}
-            >
-              <FaSearch/>
-              Explore
-            </a>
-
-            <a
-              href="#hotels"
-              className="nav-link"
-              onClick={() => setMobileMenu(false)}
-            >
-              Hotels
-            </a>
-
-            <a
-              href="#resorts"
-              className="nav-link"
-              onClick={() => setMobileMenu(false)}
-            >
-              Resorts
-            </a>
-
-            <a
-              href="#experiences"
-              className="nav-link"
-              onClick={() => setMobileMenu(false)}
-            >
-              Experiences
-            </a>
-
-            <a
-              href="#member"
-              className="nav-link"
-              onClick={() => setMobileMenu(false)}
-            >
-              Member Portal
-            </a>
-
-          </div>
-
-          <div className="navbar-actions">
-
-            <button className="sign-in-button">
-              Sign In
-            </button>
-
-            <button className="join-button">
-              Join
-            </button>
-
-          </div>
-
-        </div>
-
-      </nav>
-
+      
+       <Menu/>
       {/* ================= MAIN ================= */}
       <main>
 
@@ -290,6 +210,9 @@ export default function Home() {
 
         </section>
 
+
+        <PopularHotels/>
+
         {/* ================= FEATURED DESTINATIONS ================= */}
         <section className="featured-section">
 
@@ -311,9 +234,11 @@ export default function Home() {
                   key={destination.name}
                 >
 
-                  <img
+                  <Image
                     src={destination.image}
                     alt={destination.name}
+                    layout="fill"
+                    objectFit="cover"
                   />
 
                   <div className="destination-gradient" />

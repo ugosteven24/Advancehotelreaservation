@@ -1,371 +1,223 @@
 "use client";
 
-import "./dashboard.css"
-import { useRouter } from "next/navigation";
-import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
-import { useEffect, useState } from "react";
+import "./dashboard.css";
+import "./logout-dialog.css";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
     FaTachometerAlt,
-    FaHotel,
-    FaUsers,
     FaCalendarCheck,
-    FaMoneyBillWave,
-    FaStar,
-    FaBullhorn,
-    FaChartLine,
-    FaBell,
-    FaFileAlt,
-    FaCog,
-    FaShieldAlt,
-    FaUserShield,
-    FaSignOutAlt,
-    FaGlobe,
     FaSearch,
+    FaStar,
+    FaMoneyBillWave,
     FaTags,
-    FaMapMarkerAlt,
-    FaTicketAlt,
-    FaClipboardList,
-    FaUserTie,
-    FaHistory,
+    FaBell,
+    FaUsers,
+    FaCog,
+    FaSignOutAlt,
+    FaBars,
+    FaTimes,
 } from "react-icons/fa";
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
+import { logout } from "@/lib/logout";
 
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
-});
+const MENU_ITEMS = [
+    { label: "Dashboard", path: "/dashboard", icon: FaTachometerAlt },
+    { label: "My Bookings", path: "/dashboard/mybooking", icon: FaCalendarCheck },
+    { label: "Explore", path: "/dashboard/explore", icon: FaSearch },
+    { label: "Favorites", path: "/dashboard/favorites", icon: FaStar },
+    { label: "My Reviews", path: "/dashboard/reviews", icon: FaStar },
+    { label: "Payments", path: "/dashboard/payment", icon: FaMoneyBillWave },
+    { label: "Promotions", path: "/dashboard/promotion", icon: FaTags },
+    { label: "Notifications", path: "/dashboard/notification", icon: FaBell },
+    { label: "Profile", path: "/dashboard/profile", icon: FaUsers },
+    { label: "Settings", path: "/dashboard/settings", icon: FaCog },
+];
 
+// "/dashboard" must match exactly, otherwise it would be active on every page.
+function isActivePath(pathname, path) {
+    if (path === "/dashboard") return pathname === "/dashboard";
+    return pathname === path || pathname.startsWith(`${path}/`);
+}
 
-
-export default function RootLayout({ children }) {
-    const [activeMenu, setActiveMenu] = useState("Dashboard");
+// The root layout (app/layout.tsx) already provides <html>, <body>, fonts
+// and globals.css, so this layout only renders the dashboard shell.
+export default function DashboardLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
+    const cancelButtonRef = useRef(null);
+
     const router = useRouter();
-    // Prevent body scrolling when mobile sidebar is open
+    const pathname = usePathname();
+
+    // Prevent body scrolling when the mobile sidebar is open.
     useEffect(() => {
-        if (sidebarOpen) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "";
-        }
+        document.body.style.overflow = sidebarOpen ? "hidden" : "";
 
         return () => {
             document.body.style.overflow = "";
         };
     }, [sidebarOpen]);
 
+    // Logout confirmation dialog: focus Cancel, close on Escape.
+    useEffect(() => {
+        if (!showLogoutConfirm) return;
 
-    const handleMenuClick = (menu, path) => {
-        setActiveMenu(menu);
+        cancelButtonRef.current?.focus();
+
+        const onKeyDown = (event) => {
+            if (event.key === "Escape" && !loggingOut) {
+                setShowLogoutConfirm(false);
+            }
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [showLogoutConfirm, loggingOut]);
+
+    const openLogoutConfirm = () => {
+        setSidebarOpen(false);
+        setShowLogoutConfirm(true);
+    };
+
+    const closeLogoutConfirm = () => {
+        if (!loggingOut) setShowLogoutConfirm(false);
+    };
+
+    const handleMenuClick = (path) => {
         setSidebarOpen(false);
         router.push(path);
     };
 
+    const handleLogout = async () => {
+        if (loggingOut) return;
 
-    const upcomingBooking = {
-        hotel: "Grand Plaza Resort & Spa",
-        location: "Bora Bora, French Polynesia",
-        checkIn: "Oct 12, 3:00 PM",
-        checkOut: "Oct 19, 11:00 AM",
-        guests: "2 Adults",
-        roomType: "Ocean Villa",
-        confirmation: "#LXP-8924-M",
-        image: "/images/gallery.jpg",
-        daysUntil: "In 14 Days",
+        setLoggingOut(true);
+
+        try {
+            await logout(); // clears the server cookie, then Firebase
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+
+        router.replace("/login");
+        router.refresh();
     };
 
-
-    const pastStays = [
-        {
-            hotel: "The Metropolitan Hotel",
-            location: "New York, USA",
-            dates: "Sep 01 - Sep 05, 2023",
-            reference: "#LXP-7102-K",
-            total: "$1,250.00",
-        },
-        {
-            hotel: "Alpine Retreat Lodge",
-            location: "Zermatt, Switzerland",
-            dates: "Feb 14 - Feb 20, 2023",
-            reference: "#LXP-6551-A",
-            total: "$3,400.00",
-        },
-        {
-            hotel: "Oasis Desert Resort",
-            location: "Dubai, UAE",
-            dates: "Nov 10 - Nov 15, 2022",
-            reference: "#LXP-5022-D",
-            total: "$2,800.00",
-        },
-    ];
-
-
-    const offers = [
-        {
-            title: "Spa Package Upgrade",
-            description: "Available for next trip",
-            image: "/images/gallery1.jpg",
-        },
-        {
-            title: "Complimentary Dinner",
-            description: "Redeem 10k points",
-            image: "/images/gallery1.jpg",
-        },
-    ];
-
     return (
-        <div className="client-dashboard"  >
-
-
-
-
+        <div className="client-dashboard">
             <div
-                className={`mobile-sidebar-overlay ${sidebarOpen ? "show" : ""
-                    }`}
+                className={`mobile-sidebar-overlay ${sidebarOpen ? "show" : ""}`}
                 onClick={() => setSidebarOpen(false)}
             />
 
-
-
-
-            <aside
-                className={`client-sidebar ${sidebarOpen ? "sidebar-open" : ""
-                    }`}
-            >
-
+            <aside className={`client-sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
                 {/* Sidebar header */}
                 <div className="client-logo">
-
                     <span className="clientlogo">LuxeStay</span>
 
                     <button
+                        type="button"
                         className="mobile-sidebar-close"
                         onClick={() => setSidebarOpen(false)}
                         aria-label="Close menu"
                     >
-                        <i className="fas fa-times"></i>
+                        <FaTimes />
                     </button>
-
                 </div>
-
 
                 {/* Navigation */}
                 <nav className="client-navigation">
-
-                    {/* Dashboard */}
-                    <button
-                        className={`client-nav-item ${activeMenu === "Dashboard" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "Dashboard",
-                                "/dashboard"
-                            )
-                        }
-                    >
-                        <FaTachometerAlt className="iconsize" />
-                        <span >Dashboard</span>
-                    </button>
-
-
-                    {/* My Bookings */}
-                    <button
-                        className={`client-nav-item ${activeMenu === "My Bookings" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "My Bookings",
-                                "/dashboard/mybooking"
-                            )
-                        }
-                    >
-                        <FaCalendarCheck className="iconsize" />
-                        <span>My Bookings</span>
-                    </button>
-
-
-                    <button
-                        className={`client-nav-item ${activeMenu === "Explore" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "Explore",
-                                "/dashboard/explore"
-                            )
-                        }
-                    >
-                        <FaSearch className="iconsize" />
-                        <span>Explore</span>
-                    </button>
-                    {/* Favorites */}
-                    <button
-                        className={`client-nav-item ${activeMenu === "Favorites" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "Favorites",
-                                "/dashboard/favorites"
-                            )
-                        }
-                    >
-                        <FaStar className="iconsize" />
-                        <span>Favorites</span>
-                    </button>
-
-
-                    {/* My Reviews */}
-                    <button
-                        className={`client-nav-item ${activeMenu === "My Reviews" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "My Reviews",
-                                "/dashboard/reviews"
-                            )
-                        }
-                    >
-                        <FaStar className="iconsize" />
-                        <span>My Reviews</span>
-                    </button>
-
-
-                    {/* Payments */}
-                    <button
-                        className={`client-nav-item ${activeMenu === "Payments" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "Payments",
-                                "/dashboard/payment"
-                            )
-                        }
-                    >
-                        <FaMoneyBillWave className="iconsize" />
-                        <span>Payments</span>
-                    </button>
-
-
-                    {/* Promotions */}
-                    <button
-                        className={`client-nav-item ${activeMenu === "Promotions" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "Promotions",
-                                "/dashboard/promotion"
-                            )
-                        }
-                    >
-                        <FaTags className="iconsize" />
-                        <span>Promotions</span>
-                    </button>
-
-
-                    {/* Notifications */}
-                    <button
-                        className={`client-nav-item ${activeMenu === "Notifications" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "Notifications",
-                                "/dashboard/notification"
-                            )
-                        }
-                    >
-                        <FaBell className="iconsize" />
-                        <span>Notifications</span>
-                    </button>
-
-
-                    {/* Profile */}
-                    <button
-                        className={`client-nav-item ${activeMenu === "Profile" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "Profile",
-                                "/dashboard/profile"
-                            )
-                        }
-                    >
-                        <FaUsers className="iconsize" />
-                        <span>Profile</span>
-                    </button>
-
-
-                    {/* Settings */}
-                    <button
-                        className={`client-nav-item ${activeMenu === "Settings" ? "active" : ""
-                            }`}
-                        onClick={() =>
-                            handleMenuClick(
-                                "Settings",
-                                "/dashboard/settings"
-                            )
-                        }
-                    >
-                        <FaCog className="iconsize" />
-                        <span>Settings</span>
-                    </button>
-
+                    {MENU_ITEMS.map(({ label, path, icon: Icon }) => (
+                        <button
+                            key={path}
+                            type="button"
+                            className={`client-nav-item ${isActivePath(pathname, path) ? "active" : ""
+                                }`}
+                            aria-current={isActivePath(pathname, path) ? "page" : undefined}
+                            onClick={() => handleMenuClick(path)}
+                        >
+                            <Icon className="iconsize" />
+                            <span>{label}</span>
+                        </button>
+                    ))}
                 </nav>
-
 
                 {/* Logout */}
                 <button
+                    type="button"
                     className="client-logout"
-                    onClick={() => {
-                        setSidebarOpen(false);
-
-                        // Firebase logout
-                        // signOut(auth);
-
-                        router.push("/login");
-                    }}
+                    onClick={openLogoutConfirm}
                 >
                     <FaSignOutAlt className="iconsize" />
                     <span>Logout</span>
                 </button>
-
             </aside>
 
-
-
-
             <main className="client-main">
-
-
-
                 <div className="mobile-topbar">
-
                     <button
+                        type="button"
                         className="mobile-menu-toggle"
                         onClick={() => setSidebarOpen(true)}
                         aria-label="Open menu"
                     >
-                        <i className="fas fa-bars"></i>
+                        <FaBars />
                     </button>
 
-                    <span className="mobile-brand">
-                        LuxeStay
-                    </span>
-
+                    <span className="mobile-brand">LuxeStay</span>
                 </div>
 
-
-
                 {children}
-
             </main>
 
+            {/* Logout confirmation (top of the page) */}
+            {showLogoutConfirm && (
+                <div className="logout-dialog-backdrop" onClick={closeLogoutConfirm}>
+                    <div
+                        className="logout-dialog"
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="logout-dialog-title"
+                        aria-describedby="logout-dialog-text"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="logout-dialog__icon">
+                            <FaSignOutAlt />
+                        </div>
 
+                        <div className="logout-dialog__body">
+                            <h2 id="logout-dialog-title">Log out of LuxeStay?</h2>
+                            <p id="logout-dialog-text">
+                                You will need to sign in again to see your bookings and
+                                favorites.
+                            </p>
+                        </div>
 
+                        <div className="logout-dialog__actions">
+                            <button
+                                ref={cancelButtonRef}
+                                type="button"
+                                className="logout-dialog__cancel"
+                                onClick={closeLogoutConfirm}
+                                disabled={loggingOut}
+                            >
+                                Cancel
+                            </button>
 
+                            <button
+                                type="button"
+                                className="logout-dialog__confirm"
+                                onClick={handleLogout}
+                                disabled={loggingOut}
+                            >
+                                {loggingOut ? "Signing out..." : "Yes, log out"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
