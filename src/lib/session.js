@@ -5,7 +5,7 @@
 // Note: a "use server" file may only export async functions.
 
 import { cookies } from "next/headers";
-import { adminAuth } from "@/lib/admin";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import {
   SESSION_COOKIE,
   SEVEN_DAYS,
@@ -13,6 +13,35 @@ import {
   createSessionToken,
   verifySessionToken,
 } from "@/lib/session-token";
+
+// Google's public keys for Firebase ID tokens. jose caches them for us.
+// This replaces firebase-admin, which only verified the token and crashed
+// on Vercel (its jwks-rsa dependency require()s the ESM-only jose).
+const FIREBASE_JWKS = createRemoteJWKSet(
+  new URL(
+    "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
+  )
+);
+
+async function verifyFirebaseIdToken(idToken) {
+  const projectId =
+    process.env.FIREBASE_PROJECT_ID ??
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+  if (!projectId) throw new Error("Firebase project id is not configured.");
+
+  const { payload } = await jwtVerify(idToken, FIREBASE_JWKS, {
+    algorithms: ["RS256"],
+    issuer: `https://securetoken.google.com/${projectId}`,
+    audience: projectId,
+  });
+
+  if (typeof payload.sub !== "string" || !payload.sub) {
+    throw new Error("Token has no subject.");
+  }
+
+  return { uid: payload.sub, authTime: Number(payload.auth_time) };
+}
 
 // WRITE the user's id into the session cookie.
 // The login page passes the Firebase ID token; the server verifies it and
@@ -23,10 +52,10 @@ export async function createSession(idToken, remember = true) {
       return { ok: false, message: "Missing ID token." };
     }
 
-    const decoded = await adminAuth.verifyIdToken(idToken);
+    const decoded = await verifyFirebaseIdToken(idToken);
 
     // Only accept a token from a sign-in that just happened.
-    if (Date.now() / 1000 - decoded.auth_time > 5 * 60) {
+    if (Date.now() / 1000 - decoded.authTime > 5 * 60) {
       return { ok: false, message: "Please sign in again." };
     }
 
