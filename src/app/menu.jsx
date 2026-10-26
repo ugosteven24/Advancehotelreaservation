@@ -95,7 +95,9 @@ export default function Home() {
         <div className="navbar-container">
 
           <div className="brand">
-            LuxeStay
+           <Link href={"/"}>
+            Hotelreservation
+           </Link>
           </div>
 
           <button
@@ -114,14 +116,7 @@ export default function Home() {
               }`}
           >
 
-            <a
-              href="#explore"
-              className="nav-link"
-              onClick={() => setMobileMenu(false)}
-            >
-              <FaSearch />
-              Explore
-            </a>
+          
 
             <Link
               href={"/pages/hotels"}
@@ -132,7 +127,7 @@ export default function Home() {
             </Link>
 
             <a
-              href="#resorts"
+              href="resorts"
               className="nav-link"
               onClick={() => setMobileMenu(false)}
             >
@@ -140,19 +135,19 @@ export default function Home() {
             </a>
 
             <a
-              href="#experiences"
+              href="experiences"
               className="nav-link"
               onClick={() => setMobileMenu(false)}
             >
               Experiences
             </a>
 
-            <a
-              href="#member"
+             <a
+              href="/pages/contact"
               className="nav-link"
               onClick={() => setMobileMenu(false)}
             >
-              Member Portal
+              Contact
             </a>
 
           </div>

@@ -1120,6 +1120,7 @@ Main
 @media (max-width: 767px) {
   .hotel-search-layout {
       padding: 0 16px 32px;
+      width: 100%;
   }
 
   .hotel-search-grid {
