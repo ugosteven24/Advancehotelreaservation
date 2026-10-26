@@ -4,14 +4,13 @@ import { useState } from "react";
 import "./menu.css";
 import {
   FaArrowRight,
-
   FaSearch,
   FaLocationArrow,
   FaCalendar,
-
   FaUsers,
-
   FaHistory,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,7 +19,7 @@ const destinations = [
   {
     name: "Bali, Indonesia",
     properties: "42 Premium Properties",
-    image:"/images/gallery1.jpg",
+    image: "/images/gallery1.jpg",
   },
   {
     name: "Paris, France",
@@ -82,8 +81,7 @@ export default function Home() {
     });
 
     alert(
-      `Searching for ${
-        location || "all destinations"
+      `Searching for ${location || "all destinations"
       }`
     );
   };
@@ -101,19 +99,19 @@ export default function Home() {
           </div>
 
           <button
+            type="button"
             className="mobile-menu-button"
-            onClick={() => setMobileMenu(!mobileMenu)}
-            aria-label="Toggle navigation"
+            onClick={() => setMobileMenu((prev) => !prev)}
+            aria-label={mobileMenu ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenu}
+            aria-controls="main-navigation"
           >
-            <span className="material-symbols-outlined">
-              {mobileMenu ? "close" : "menu"}
-            </span>
+            {mobileMenu ? <FaTimes size={22} /> : <FaBars size={22} />}
           </button>
 
           <div
-            className={`navigation ${
-              mobileMenu ? "navigation-open" : ""
-            }`}
+            className={`navigation ${mobileMenu ? "navigation-open" : ""
+              }`}
           >
 
             <a
@@ -121,7 +119,7 @@ export default function Home() {
               className="nav-link"
               onClick={() => setMobileMenu(false)}
             >
-              <FaSearch/>
+              <FaSearch />
               Explore
             </a>
 
