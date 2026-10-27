@@ -1,0 +1,136 @@
+
+.location-page {
+
+  font-family: Arial, sans-serif;
+}
+
+.location-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.location-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.location-actions button {
+  flex: 1;
+  margin-top: 0;
+  padding: 14px 12px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.location-cancel-button {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.location-cancel-button:hover {
+  background: #f3f4f6;
+}
+
+.location-actions .location-allow-button {
+  border: 0;
+  background: #2563eb;
+  color: #fff;
+}
+
+.location-actions .location-allow-button:hover {
+  background: #1d4ed8;
+}
+
+.location-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.location-dialog {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px 26px;
+  border-radius: 18px;
+  background: #fff;
+  color: #172033;
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+  animation: location-appear 0.2s ease-out;
+}
+
+.location-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: #e8f2ff;
+  font-size: 30px;
+}
+
+.location-dialog h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+}
+
+.location-dialog > p {
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.location-allow-button {
+  width: 100%;
+  margin-top: 18px;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.location-allow-button:hover {
+  background: #1d4ed8;
+}
+
+.location-allow-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.location-error {
+  color: #dc2626 !important;
+  font-size: 14px !important;
+}
+
+.location-hint {
+  font-size: 13px !important;
+}
+
+@keyframes location-appear {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

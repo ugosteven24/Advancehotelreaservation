@@ -15,55 +15,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
-const destinations = [
-  {
-    name: "Bali, Indonesia",
-    properties: "42 Premium Properties",
-    image: "/images/gallery1.jpg",
-  },
-  {
-    name: "Paris, France",
-    properties: "28 Premium Properties",
-    image:
-      "/images/gallery2.jpg",
-  },
-  {
-    name: "New York, USA",
-    properties: "35 Premium Properties",
-    image:
-      "/images/gallery.jpg",
-  },
-];
-
-const recentSearches = [
-  {
-    location: "Tokyo, Japan",
-    details: "Oct 12 - Oct 18 • 2 Guests",
-  },
-  {
-    location: "Maldives",
-    details: "Nov 01 - Nov 10 • 2 Guests",
-  },
-];
-
-const properties = [
-  {
-    name: "The Azure Tower",
-    price: "$850",
-    rating: "4.9",
-    location: "Shinjuku, Tokyo • Luxury Suite • City View",
-    image:
-      "/images/gallery1.jpg",
-  },
-  {
-    name: "Coral Reef Retreat",
-    price: "$1,200",
-    rating: "5.0",
-    location: "North Atoll, Maldives • Overwater Villa • Private Pool",
-    image:
-      "/images/gallery2.jpg",
-  },
-];
+import Location from "./location/location"
 
 export default function Home() {
   const [location, setLocation] = useState("");
@@ -99,7 +51,7 @@ export default function Home() {
             Hotelreservation
            </Link>
           </div>
-
+           <Location/>
           <button
             type="button"
             className="mobile-menu-button"

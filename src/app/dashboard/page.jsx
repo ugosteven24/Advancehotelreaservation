@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import "./dashboard.css";
 import PopularHotels from "./component/popularhotels"
-import { getUserId  } from "@/lib/session";
+import { getUserId } from "@/lib/session";
+import Location from "../location/location"
 export default function ClientDashboard() {
     const [favorites, setFavorites] = useState([1, 2, 3, 4, 5]);
     const [activeMenu, setActiveMenu] = useState("Dashboard");
@@ -108,9 +109,9 @@ export default function ClientDashboard() {
         },
     ];
 
-  useEffect(() => {
-    getUserId().then(setUserId);
-  }, []);
+    useEffect(() => {
+        getUserId().then(setUserId);
+    }, []);
     return (
         <>
             <header className="client-header">
@@ -118,6 +119,8 @@ export default function ClientDashboard() {
 
 
                 <div>
+                    {/*  ///////////////////GET THE USER LOCATION////////////////*/}
+                    <Location />
 
                     <h1>
                         Welcome back, Sarah
@@ -126,6 +129,8 @@ export default function ClientDashboard() {
                     <p>
                         Here is an overview of your stays.
                     </p>
+
+
 
                 </div>
 
