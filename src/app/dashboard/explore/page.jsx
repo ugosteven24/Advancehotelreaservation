@@ -1,1010 +1,762 @@
+
 "use client";
 
-import "./explore.css";
-import "./nearbyhotels.css"
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
-import {
-  collection,
-  getDocs,
-  limit,
-  query,
-  startAfter,
-  doc,
-  setDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-
-import { getAuth } from "firebase/auth";
-
-import {
-  MapPin,
-  Star,
-  Heart,
-  Hotel,
-  LoaderCircle,
-} from "lucide-react";
-
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { db } from "@/firebase/firebase";
-export default function Home() {
-  const [location, setLocation] = useState("");
-  const [dates, setDates] = useState("");
-  const [guests, setGuests] = useState("2 Guests, 1 Room");
+import {
+  Search,
+  MapPin,
+  CalendarDays,
+  Users,
+  Heart,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  Waves,
+  Wifi,
+  Utensils,
+  Dumbbell,
+  ShieldCheck,
+  Headset,
+  Star,
+  Menu,
+  X,
+} from "lucide-react";
+import ProfileImage from "../component/profileImage";
+import "./resorts.css";
 
-  const categories = [
-    {
-      name: "Beachfront",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none">
-          <path
-            d="M4 20L20 4"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M7 7C11.5 7 16 11.5 16 16"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-          <path
-            d="M4 4C10 4 20 10 20 20"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-          <path
-            d="M3 21C5 18 7 17 10 17"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Mountain Retreats",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none">
-          <path
-            d="M3 20L9.5 11L13 15L16 10L21 20H3Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M9.5 11L11 8L13 11"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Urban Luxury",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none">
-          <path
-            d="M4 21V8H10V21"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-          <path
-            d="M10 21V4H16V21"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-          <path
-            d="M16 21V11H21V21"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
+const resorts = [
+  {
+    id: 1,
+    name: "Maldives Island Resort",
+    location: "Maldives",
+    country: "Maldives",
+    type: "Beach Resort",
+    price: 450,
+    rating: 4.8,
+    reviews: 124,
+    badge: "Popular",
+    badgeType: "popular",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 2,
+    name: "Santorini Cliff Resort",
+    location: "Santorini, Greece",
+    country: "Greece",
+    type: "Beach Resort",
+    price: 320,
+    rating: 4.6,
+    reviews: 98,
+    badge: "Best Value",
+    badgeType: "value",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant"],
+    image:
+      "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 3,
+    name: "Bali Beach Resort & Spa",
+    location: "Bali, Indonesia",
+    country: "Indonesia",
+    type: "Beach Resort",
+    price: 280,
+    rating: 4.9,
+    reviews: 176,
+    badge: "Luxury",
+    badgeType: "luxury",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 4,
+    name: "Lake Como Resort",
+    location: "Lake Como, Italy",
+    country: "Italy",
+    type: "Mountain Resort",
+    price: 390,
+    rating: 4.5,
+    reviews: 87,
+    badge: "Trending",
+    badgeType: "trending",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 5,
+    name: "Phuket Island Resort",
+    location: "Phuket, Thailand",
+    country: "Thailand",
+    type: "Island Resort",
+    price: 260,
+    rating: 4.7,
+    reviews: 112,
+    badge: "Family Friendly",
+    badgeType: "family",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Fitness Center"],
+    image:
+      "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 6,
+    name: "Seychelles Resort & Spa",
+    location: "Seychelles",
+    country: "Seychelles",
+    type: "Beach Resort",
+    price: 520,
+    rating: 4.8,
+    reviews: 143,
+    badge: "Romantic",
+    badgeType: "romantic",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1000&q=85",
+  },
+];
 
-          <path d="M7 11H8" stroke="currentColor" strokeWidth="2" />
-          <path d="M7 15H8" stroke="currentColor" strokeWidth="2" />
+const resortTypes = [
+  "Beach Resort",
+  "Mountain Resort",
+  "Island Resort",
+  "All-Inclusive",
+  "Wellness Resort",
+  "Family Resort",
+];
 
-          <path d="M13 8H14" stroke="currentColor" strokeWidth="2" />
-          <path d="M13 12H14" stroke="currentColor" strokeWidth="2" />
-          <path d="M13 16H14" stroke="currentColor" strokeWidth="2" />
+const amenityOptions = [
+  { label: "Swimming Pool", value: "Pool" },
+  { label: "Spa & Wellness", value: "Spa" },
+  { label: "Free WiFi", value: "WiFi" },
+  { label: "Restaurant", value: "Restaurant" },
+  { label: "Fitness Center", value: "Fitness Center" },
+  { label: "Beach Access", value: "Beach Access" },
+];
 
-          <path d="M18 15H19" stroke="currentColor" strokeWidth="2" />
-          <path d="M18 18H19" stroke="currentColor" strokeWidth="2" />
-        </svg>
-      ),
-    },
-    {
-      name: "Spa & Wellness",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 21C12 15 12 10 12 5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M12 13C7 13 4 10 4 6C9 6 12 9 12 13Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M12 15C17 15 20 12 20 8C15 8 12 11 12 15Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M12 9C9 8 7 5 8 2"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: "Golf Resorts",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none">
-          <path
-            d="M8 21V4L17 8L8 12"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M5 21H13"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <circle
-            cx="18"
-            cy="20"
-            r="2"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-        </svg>
-      ),
-    },
-  ];
-  const PAGE_SIZE = 9;
+const amenityIcons = {
+  Pool: Waves,
+  Spa: Waves,
+  WiFi: Wifi,
+  Restaurant: Utensils,
+  "Fitness Center": Dumbbell,
+  "Beach Access": Waves,
+};
 
-  const FILTERS = [
-    "All Hotels",
-    "Lagos",
-    "Abuja",
-    "Featured",
-    "Verified",
-  ];
-  
-  const NIGERIAN_STATES = [
-    "Abia",
-    "Adamawa",
-    "Akwa Ibom",
-    "Anambra",
-    "Bauchi",
-    "Bayelsa",
-    "Benue",
-    "Borno",
-    "Cross River",
-    "Delta",
-    "Ebonyi",
-    "Edo",
-    "Ekiti",
-    "Enugu",
-    "Gombe",
-    "Imo",
-    "Jigawa",
-    "Kaduna",
-    "Kano",
-    "Katsina",
-    "Kebbi",
-    "Kogi",
-    "Kwara",
-    "Lagos",
-    "Nasarawa",
-    "Niger",
-    "Ogun",
-    "Ondo",
-    "Osun",
-    "Oyo",
-    "Plateau",
-    "Rivers",
-    "Sokoto",
-    "Taraba",
-    "Yobe",
-    "Zamfara",
-    "FCT",
-  ];
-  
-  const FCT_NAMES = [
-    "fct",
-    "abuja",
-    "federal capital territory",
-  ];
-  
-  function normalizeLocation(value) {
-    return String(value ?? "").trim().toLowerCase();
-  }
-  
-  function formatPrice(price) {
-    const amount = Number(price);
-  
-    if (
-      price === undefined ||
-      price === null ||
-      price === "" ||
-      !Number.isFinite(amount)
-    ) {
-      return "Price unavailable";
-    }
-  
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }
-  
-  function matchesState(hotel, selectedState) {
-    if (!selectedState) return true;
-  
-    const state = normalizeLocation(hotel.state);
-    const city = normalizeLocation(hotel.city);
-    const selected = normalizeLocation(selectedState);
-  
-    // Abuja may be stored as Abuja, FCT, or Federal Capital Territory.
-    if (selected === "fct") {
-      return (
-        FCT_NAMES.includes(state) ||
-        FCT_NAMES.includes(city)
-      );
-    }
-  
-    // Prefer the state field. Use city as a fallback when
-    // the document does not have a state value.
-    if (state) {
-      return state === selected;
-    }
-  
-    return city === selected;
-  }
-  
-  const handleSearch = () => {
-    console.log({
-      location,
-      dates,
-      guests,
-    });
-  };
-  const [hotels, setHotels] = useState([]);
+export default function ResortsPage() {
+  const [destination, setDestination] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [guests, setGuests] = useState("2 Adults, 0 Children");
 
-  const [activeFilter, setActiveFilter] = useState("All Hotels");
-  const [selectedState, setSelectedState] = useState("");
-
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState("");
-
-  // Stores the last Firestore document fetched.
-  const lastDocRef = useRef(null);
-
-  // Element used by infinite scrolling.
-  const loadMoreRef = useRef(null);
-
-  // Prevents overlapping Firestore requests.
-  const requestInProgress = useRef(false);
-
-  // =========================================================
-  // FETCH HOTELS
-  // =========================================================
-
-  const fetchHotels = useCallback(async (nextPage = false) => {
-    if (requestInProgress.current) return;
-    if (nextPage && !hasMore) return;
-
-    requestInProgress.current = true;
-
-    if (nextPage) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-
-    setError("");
-
-    try {
-      const hotelsRef = collection(db, "hotels");
-
-      const hotelsQuery =
-        nextPage && lastDocRef.current
-          ? query(
-              hotelsRef,
-              startAfter(lastDocRef.current),
-              limit(PAGE_SIZE)
-            )
-          : query(
-              hotelsRef,
-              limit(PAGE_SIZE)
-            );
-
-      const snapshot = await getDocs(hotelsQuery);
-
-      const newHotels = snapshot.docs.map((hotelDoc) => ({
-        ...hotelDoc.data(),
-        documentId: hotelDoc.id,
-      }));
-
-      if (snapshot.docs.length > 0) {
-        lastDocRef.current =
-          snapshot.docs[snapshot.docs.length - 1];
-      }
-
-      setHotels((previous) =>
-        nextPage
-          ? [...previous, ...newHotels]
-          : newHotels
-      );
-
-      setHasMore(snapshot.docs.length === PAGE_SIZE);
-    } catch (err) {
-      console.error("Failed to fetch hotels:", err);
-      setError("Unable to load hotels. Please try again.");
-    } finally {
-      requestInProgress.current = false;
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [hasMore]);
-
-  // =========================================================
-  // INITIAL FETCH
-  // =========================================================
-
-  useEffect(() => {
-    fetchHotels(false);
-  }, [fetchHotels]);
-
-  // =========================================================
-  // INFINITE SCROLL
-  // =========================================================
-
-  useEffect(() => {
-    const target = loadMoreRef.current;
-
-    if (
-      !target ||
-      !hasMore ||
-      loading ||
-      loadingMore ||
-      error
-    ) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          fetchHotels(true);
-        }
-      },
-      {
-        root: null,
-        rootMargin: "300px",
-        threshold: 0,
-      }
-    );
-
-    observer.observe(target);
-
-    return () => observer.disconnect();
-  }, [
-    fetchHotels,
-    hasMore,
-    loading,
-    loadingMore,
-    error,
+  const [maxPrice, setMaxPrice] = useState(1000);
+  const [ratings, setRatings] = useState([5]);
+  const [types, setTypes] = useState(["Beach Resort"]);
+  const [amenities, setAmenities] = useState([
+    "Pool",
+    "WiFi",
   ]);
 
-  // =========================================================
-  // FILTER HOTELS
-  // =========================================================
+  const [sortBy, setSortBy] = useState("popular");
+  const [favorites, setFavorites] = useState([]);
+  const [page, setPage] = useState(1);
+  const [mobileFiltersOpen, setMobileFiltersOpen] =
+    useState(false);
 
-  const filteredHotels = useMemo(() => {
-    let result = hotels;
+  const pageSize = 6;
 
-    switch (activeFilter) {
-      case "Lagos":
-        result = result.filter((hotel) => {
-          const city = normalizeLocation(hotel.city);
-          const state = normalizeLocation(hotel.state);
+  const filteredResorts = useMemo(() => {
+    let result = resorts.filter((resort) => {
+      const term = searchTerm.trim().toLowerCase();
 
-          return city === "lagos" || state === "lagos";
-        });
-        break;
+      const matchesDestination =
+        !term ||
+        resort.name.toLowerCase().includes(term) ||
+        resort.location.toLowerCase().includes(term) ||
+        resort.country.toLowerCase().includes(term);
 
-      case "Abuja":
-        result = result.filter((hotel) => {
-          const city = normalizeLocation(hotel.city);
-          const state = normalizeLocation(hotel.state);
+      const matchesPrice = resort.price <= maxPrice;
 
-          return (
-            FCT_NAMES.includes(city) ||
-            FCT_NAMES.includes(state)
-          );
-        });
-        break;
+      const matchesRating =
+        ratings.length === 0 ||
+        ratings.some((rating) => resort.rating >= rating - 0.9);
 
-      case "Featured":
-        result = result.filter(
-          (hotel) => hotel.featured === true
-        );
-        break;
+      const matchesType =
+        types.length === 0 ||
+        types.includes(resort.type);
 
-      case "Verified":
-        result = result.filter(
-          (hotel) => hotel.verified === true
-        );
-        break;
-
-      default:
-        break;
-    }
-
-    // Apply the selected Nigerian state.
-    if (selectedState) {
-      result = result.filter((hotel) =>
-        matchesState(hotel, selectedState)
+      const matchesAmenities = amenities.every((amenity) =>
+        resort.amenities.includes(amenity)
       );
+
+      return (
+        matchesDestination &&
+        matchesPrice &&
+        matchesRating &&
+        matchesType &&
+        matchesAmenities
+      );
+    });
+
+    if (sortBy === "price-low") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-high") {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "rating") {
+      result.sort((a, b) => b.rating - a.rating);
+    } else {
+      result.sort((a, b) => b.reviews - a.reviews);
     }
 
     return result;
-  }, [hotels, activeFilter, selectedState]);
+  }, [searchTerm, maxPrice, ratings, types, amenities, sortBy]);
 
-  // =========================================================
-  // HANDLE BUTTON FILTER
-  // =========================================================
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredResorts.length / pageSize)
+  );
 
-  const handleFilterChange = (filter) => {
-    setActiveFilter(filter);
+  const visibleResorts = filteredResorts.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
 
-    // Clear the state selection when a category button
-    // is selected, so the filters do not conflict.
-    setSelectedState("");
-  };
+  function toggleValue(value, values, setValues) {
+    setValues(
+      values.includes(value)
+        ? values.filter((item) => item !== value)
+        : [...values, value]
+    );
+    setPage(1);
+  }
 
-  // =========================================================
-  // HANDLE STATE DROPDOWN
-  // =========================================================
+  function handleSearch(event) {
+    event.preventDefault();
+    setSearchTerm(destination);
+    setPage(1);
+  }
 
-  const handleStateChange = (event) => {
-    const state = event.target.value;
+  function clearFilters() {
+    setMaxPrice(1000);
+    setRatings([]);
+    setTypes([]);
+    setAmenities([]);
+    setDestination("");
+    setSearchTerm("");
+    setPage(1);
+  }
 
-    setSelectedState(state);
+  function toggleFavorite(id) {
+    setFavorites((previous) =>
+      previous.includes(id)
+        ? previous.filter((item) => item !== id)
+        : [...previous, id]
+    );
+  }
 
-    // State selection takes priority over category filters.
-    setActiveFilter("All Hotels");
-  };
-
-  // =========================================================
-  // ADD HOTEL TO FAVORITES
-  // =========================================================
-
-  const handleFavorite = async (hotel) => {
-    try {
-      const user = getAuth().currentUser;
-
-      if (!user) {
-        alert("Please log in to add hotels to your favorites.");
-        return;
-      }
-
-      const hotelId = hotel.documentId;
-
-      const favoriteRef = doc(
-        db,
-        "favorites",
-        user.uid,
-        "hotels",
-        hotelId
-      );
-
-      await setDoc(favoriteRef, {
-        hotelId,
-        hotelName: hotel.hotelName || "",
-        coverImage: hotel.coverImage || "",
-        price: hotel.price ?? null,
-        city: hotel.city || "",
-        state: hotel.state || "",
-        country: hotel.country || "",
-        address: hotel.address || "",
-        description: hotel.description || "",
-        amenities: Array.isArray(hotel.amenities)
-          ? hotel.amenities
-          : [],
-        starRating: hotel.starRating ?? null,
-        verified: hotel.verified ?? false,
-        featured: hotel.featured ?? false,
-        savedAt: serverTimestamp(),
-      });
-
-      alert("Hotel added to favorites!");
-    } catch (err) {
-      console.error("Failed to add favorite:", err);
-      alert("Unable to add hotel to favorites. Please try again.");
-    }
-  };
-
-  // =========================================================
-  // RENDER
-  // =========================================================
   return (
-    <main className="explore-page">
-      <section className="hero-section">
-        <h1>Find Your Next Luxury Stay</h1>
+    <main className="resorts-page">
+     <header className="resorts-header">
+        <Link href="/" className="resorts-brand">
+          <span className="brand-mark">
+            <Waves size={25} />
+          </span>
+          <span>
+            <strong>HotelReserve</strong>
+            <small>Stay Better. Travel Further.</small>
+          </span>
+        </Link>
 
-        <p className="hero-subtitle">
-          Where would you like to escape to next, guest?
-        </p>
+        <nav className="resorts-nav">
+          <Link href="/dashboard" >Home</Link>
+          <Link href="/dashboard/explore" className="active">Explore</Link>
 
-        <div className="search-box">
-          {/* LOCATION */}
-          <div className="search-field-wrapper">
-            <label>LOCATION</label>
+          <Link href="/dashboard/favorites" >Favorites</Link>
+          <Link href="/dashboard/mybooking">My-booking</Link>
+          <Link href="/dashboard/notification" >Notification</Link>
+          <Link href="/dashboard/profile" >Profile</Link>
+        </nav>
 
-            <div className="search-field">
-              <svg
-                className="field-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M20 10C20 15 12 21 12 21S4 15 4 10C4 5.58 7.58 2 12 2C16.42 2 20 5.58 20 10Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-
-                <circle
-                  cx="12"
-                  cy="10"
-                  r="2.5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-              </svg>
-
-              <input
-                type="text"
-                placeholder="Where are you going?"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="vertical-divider"></div>
-
-          {/* DATES */}
-          <div className="search-field-wrapper">
-            <label>DATES</label>
-
-            <div className="search-field">
-              <svg
-                className="field-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <rect
-                  x="3"
-                  y="5"
-                  width="18"
-                  height="16"
-                  rx="1"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-
-                <path
-                  d="M3 9H21"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-
-                <path
-                  d="M8 3V7"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-
-                <path
-                  d="M16 3V7"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-
-              <input
-                type="text"
-                placeholder="Check in - Check out"
-                value={dates}
-                onChange={(e) => setDates(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="vertical-divider"></div>
-
-          {/* GUESTS */}
-          <div className="search-field-wrapper">
-            <label>GUESTS</label>
-
-            <div className="search-field">
-              <svg
-                className="field-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <circle
-                  cx="9"
-                  cy="8"
-                  r="3"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-
-                <path
-                  d="M3 20C3 16.69 5.69 14 9 14C12.31 14 15 16.69 15 20"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-
-                <path
-                  d="M15 11C17.21 11 19 12.79 19 15"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-
-                <path
-                  d="M18 14C20.21 14 22 15.79 22 18"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-
-              <input
-                type="text"
-                value={guests}
-                onChange={(e) => setGuests(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* SEARCH BUTTON */}
+        <div className="header-actions">
           <button
-            className="search-button"
-            onClick={handleSearch}
+            type="button"
+            className="header-icon"
+            aria-label="Open search"
+            onClick={() =>
+              document
+                .getElementById("resort-search")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
           >
-            Search
+            <Search size={20} />
           </button>
-        </div>
-      </section>
 
-      {/* CATEGORIES */}
-      <section className="categories-section">
-        <h2>Explore by Category</h2>
-
-        <div className="categories-container">
-          {categories.map((category) => (
-            <button
-              className="category-button"
-              key={category.name}
-              onClick={() => console.log(category.name)}
-            >
-              <span className="category-icon">
-                {category.icon}
+          <Link
+            href="/favorites"
+            className="header-icon"
+            aria-label="Favorites"
+          >
+            <Heart size={20} />
+            {favorites.length > 0 && (
+              <span className="favorite-count">
+                {favorites.length}
               </span>
+            )}
+          </Link>
 
-              <span>{category.name}</span>
-            </button>
-          ))}
+          <Link href="/login" className="signin-link">
+            <ProfileImage />
+            <span>Sign Out </span>
+          </Link>
+
+          <Link href="/my-bookings" className="bookings-button">
+            My Bookings
+          </Link>
+        </div>
+      </header>
+
+      <section className="resort-hero">
+        <div className="hero-overlay" />
+
+        <div className="hero-content">
+          <span className="hero-label">
+            <Waves size={15} />
+            Exclusive Resorts
+          </span>
+
+          <h1>
+            Discover the World’s
+            <br />
+            Most Beautiful Resorts
+          </h1>
+
+          <p>
+            Luxurious stays. Breathtaking views. Unforgettable
+            experiences.
+            <br className="desktop-break" />
+            Find your perfect resort getaway with HotelReserve.
+          </p>
         </div>
       </section>
-      <section className="nearby-hotels">
-      <div className="nearby-hotels__container">
 
-        {/* HEADER */}
-        <div className="nearby-hotels__header">
-          <div className="nearby-hotels__intro">
-            <div className="nearby-hotels__eyebrow">
-              <Star size={18} />
-              <span>DISCOVER YOUR NEXT STAY</span>
+      <section
+        className="resort-search-wrap"
+        id="resort-search"
+      >
+        <form className="resort-search" onSubmit={handleSearch}>
+          <label className="search-field destination-field">
+            <MapPin size={21} />
+            <span>
+              <strong>Destination</strong>
+              <input
+                type="text"
+                placeholder="Where do you want to go?"
+                value={destination}
+                onChange={(event) =>
+                  setDestination(event.target.value)
+                }
+              />
+            </span>
+          </label>
+
+          <label className="search-field">
+            <CalendarDays size={21} />
+            <span>
+              <strong>Check In</strong>
+              <input
+                type="date"
+                value={checkIn}
+                onChange={(event) =>
+                  setCheckIn(event.target.value)
+                }
+              />
+            </span>
+          </label>
+
+          <label className="search-field">
+            <CalendarDays size={21} />
+            <span>
+              <strong>Check Out</strong>
+              <input
+                type="date"
+                min={checkIn || undefined}
+                value={checkOut}
+                onChange={(event) =>
+                  setCheckOut(event.target.value)
+                }
+              />
+            </span>
+          </label>
+
+          <label className="search-field guests-field">
+            <Users size={21} />
+            <span>
+              <strong>Guests</strong>
+              <select
+                value={guests}
+                onChange={(event) =>
+                  setGuests(event.target.value)
+                }
+              >
+                <option>1 Adult, 0 Children</option>
+                <option>2 Adults, 0 Children</option>
+                <option>2 Adults, 1 Child</option>
+                <option>2 Adults, 2 Children</option>
+                <option>4 Adults, 0 Children</option>
+              </select>
+            </span>
+            <ChevronDown size={15} />
+          </label>
+
+          <button className="search-resorts-button" type="submit">
+            <Search size={18} />
+            Search Resorts
+          </button>
+        </form>
+      </section>
+
+      <section className="resorts-main">
+        <button
+          className="mobile-filter-toggle"
+          type="button"
+          onClick={() =>
+            setMobileFiltersOpen((previous) => !previous)
+          }
+        >
+          {mobileFiltersOpen ? <X size={18} /> : <SlidersHorizontal size={18} />}
+          {mobileFiltersOpen ? "Close Filters" : "Filters"}
+        </button>
+
+        <aside
+          className={`resort-filters ${
+            mobileFiltersOpen ? "filters-open" : ""
+          }`}
+        >
+          <div className="filter-heading">
+            <h2>
+              <SlidersHorizontal size={17} />
+              Filters
+            </h2>
+            <button type="button" onClick={clearFilters}>
+              Clear all
+            </button>
+          </div>
+
+          <div className="filter-section">
+            <h3>Price per night</h3>
+
+            <input
+              className="price-slider"
+              type="range"
+              min="50"
+              max="1000"
+              step="10"
+              value={maxPrice}
+              onChange={(event) => {
+                setMaxPrice(Number(event.target.value));
+                setPage(1);
+              }}
+              aria-label="Maximum price per night"
+            />
+
+            <div className="price-labels">
+              <span>$50</span>
+              <strong>${maxPrice.toLocaleString()} max</strong>
+            </div>
+          </div>
+
+          <div className="filter-section">
+            <h3>Star Rating</h3>
+
+            {[5, 4, 3, 2, 1].map((rating) => (
+              <label className="filter-option" key={rating}>
+                <input
+                  type="checkbox"
+                  checked={ratings.includes(rating)}
+                  onChange={() =>
+                    toggleValue(rating, ratings, setRatings)
+                  }
+                />
+                <span>{rating} Star</span>
+                <span className="rating-stars">
+                  {"★".repeat(rating)}
+                  <span className="empty-stars">
+                    {"★".repeat(5 - rating)}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+
+          <div className="filter-section">
+            <h3>Resort Type</h3>
+
+            {resortTypes.map((type) => (
+              <label className="filter-option" key={type}>
+                <input
+                  type="checkbox"
+                  checked={types.includes(type)}
+                  onChange={() =>
+                    toggleValue(type, types, setTypes)
+                  }
+                />
+                <span>{type}</span>
+              </label>
+            ))}
+          </div>
+
+          <div className="filter-section">
+            <h3>Amenities</h3>
+
+            {amenityOptions.map((amenity) => (
+              <label
+                className="filter-option"
+                key={amenity.value}
+              >
+                <input
+                  type="checkbox"
+                  checked={amenities.includes(amenity.value)}
+                  onChange={() =>
+                    toggleValue(
+                      amenity.value,
+                      amenities,
+                      setAmenities
+                    )
+                  }
+                />
+                <span>{amenity.label}</span>
+              </label>
+            ))}
+          </div>
+
+          <button
+            className="apply-filters-button"
+            type="button"
+            onClick={() => setMobileFiltersOpen(false)}
+          >
+            Apply Filters
+          </button>
+        </aside>
+
+        <div className="resorts-results">
+          <div className="results-heading">
+            <div>
+              <h2>Best Resorts</h2>
+              <p>
+                Showing {visibleResorts.length} of{" "}
+                {filteredResorts.length} resorts
+              </p>
             </div>
 
-            <h2 className="nearby-hotels__title">
-              Nearby Hotels
-            </h2>
-
-            <p className="nearby-hotels__subtitle">
-              Explore accommodations for your next trip.
-            </p>
-          </div>
-
-          {/* FILTERS */}
-          <div className="nearby-hotels__filters">
-            {FILTERS.map((filter) => (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => handleFilterChange(filter)}
-                className={`nearby-hotels__filter ${
-                  activeFilter === filter ? "is-active" : ""
-                }`}
+            <label className="sort-control">
+              <span>Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(event) => {
+                  setSortBy(event.target.value);
+                  setPage(1);
+                }}
               >
-                {filter}
-              </button>
-            ))}
+                <option value="popular">Popularity</option>
+                <option value="rating">Highest Rated</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+              <ChevronDown size={15} />
+            </label>
+          </div>
 
-            {/* NIGERIAN STATE DROPDOWN */}
-            <select
-              value={selectedState}
-              onChange={handleStateChange}
-              className="nearby-hotels__state-select"
-              aria-label="Filter hotels by Nigerian state"
-            >
-              <option value="">All States</option>
+          {visibleResorts.length > 0 ? (
+            <div className="resorts-grid">
+              {visibleResorts.map((resort) => (
+                <article className="resort-card" key={resort.id}>
+                  <div className="resort-image-wrap">
+                    <img
+                      src={resort.image}
+                      alt={resort.name}
+                      className="resort-image"
+                      loading="lazy"
+                    />
 
-              {NIGERIAN_STATES.map((state) => (
-                <option key={state} value={state}>
-                  {state === "FCT" ? "Abuja (FCT)" : state}
-                </option>
+                    <span
+                      className={`resort-badge ${resort.badgeType}`}
+                    >
+                      {resort.badge}
+                    </span>
+
+                    <button
+                      type="button"
+                      className={`favorite-button ${
+                        favorites.includes(resort.id)
+                          ? "is-favorite"
+                          : ""
+                      }`}
+                      aria-label={
+                        favorites.includes(resort.id)
+                          ? "Remove from favorites"
+                          : "Add to favorites"
+                      }
+                      onClick={() => toggleFavorite(resort.id)}
+                    >
+                      <Heart
+                        size={19}
+                        fill={
+                          favorites.includes(resort.id)
+                            ? "currentColor"
+                            : "none"
+                        }
+                      />
+                    </button>
+
+                    <span className="image-rating">
+                      <Star size={13} fill="currentColor" />
+                      {resort.rating}
+                      <span>({resort.reviews})</span>
+                    </span>
+                  </div>
+
+                  <div className="resort-card-body">
+                    <h3>{resort.name}</h3>
+
+                    <p className="resort-location">
+                      <MapPin size={14} />
+                      {resort.location}
+                      <span>·</span>
+                      {resort.type}
+                    </p>
+
+                    <div className="resort-amenities">
+                      {resort.amenities.slice(0, 4).map((amenity) => {
+                        const Icon = amenityIcons[amenity] || Waves;
+
+                        return (
+                          <span key={amenity} title={amenity}>
+                            <Icon size={14} />
+                            {amenity === "Fitness Center"
+                              ? "Fitness"
+                              : amenity}
+                          </span>
+                        );
+                      })}
+                    </div>
+
+                    <div className="resort-card-bottom">
+                      <div className="resort-price">
+                        <strong>
+                          ${resort.price.toLocaleString()}
+                        </strong>
+                        <span>/ night</span>
+                      </div>
+
+                      <Link
+                        href={`/pages/resorts/${resort.id}`}
+                        className="view-details-button"
+                      >
+                        View Details
+                        <ArrowRight size={15} />
+                      </Link>
+                    </div>
+                  </div>
+                </article>
               ))}
-            </select>
-          </div>
-        </div>
-
-        {/* INITIAL LOADING */}
-        {loading && hotels.length === 0 && (
-          <div className="nearby-hotels__loading">
-            <LoaderCircle
-              size={24}
-              className="nearby-hotels__spinner"
-            />
-            <span>Loading hotels...</span>
-          </div>
-        )}
-
-        {/* INITIAL LOAD ERROR */}
-        {!loading && error && hotels.length === 0 && (
-          <div className="nearby-hotels__error">
-            <p>{error}</p>
-
-            <button
-              type="button"
-              onClick={() => fetchHotels(false)}
-              className="nearby-hotels__button"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {/* EMPTY FILTER RESULTS */}
-        {!loading &&
-          !error &&
-          filteredHotels.length === 0 && (
-            <div className="nearby-hotels__empty">
-              <Hotel size={36} />
-
-              <h3>No hotels found</h3>
-
+            </div>
+          ) : (
+            <div className="no-resorts">
+              <Search size={34} />
+              <h3>No resorts found</h3>
               <p>
-                No hotels match this filter in the hotels
-                currently loaded. Try another state or filter.
+                Try another destination or remove some filters.
               </p>
+              <button
+                type="button"
+                className="view-details-button"
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </button>
             </div>
           )}
 
-        {/* HOTEL CARDS */}
-        <div className="nearby-hotels__grid">
-          {filteredHotels.map((hotel) => {
-            const hotelId = hotel.documentId;
-
-            const amenities = Array.isArray(hotel.amenities)
-              ? hotel.amenities
-              : [];
-
-            return (
-              <article
-                key={hotel.documentId}
-                className="hotel-card"
+          {filteredResorts.length > pageSize && (
+            <nav className="resort-pagination" aria-label="Pagination">
+              <button
+                type="button"
+                disabled={page === 1}
+                onClick={() => setPage((previous) => previous - 1)}
+                aria-label="Previous page"
               >
-                {/* IMAGE */}
-                <div className="hotel-card__image">
-                  {hotel.coverImage ? (
-                    <img
-                      src={hotel.coverImage}
-                      alt={hotel.hotelName || "Hotel"}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="hotel-card__image-placeholder">
-                      <Hotel size={48} />
-                    </div>
-                  )}
+                <ChevronLeft size={18} />
+              </button>
 
-                  {hotel.featured === true && (
-                    <span className="hotel-card__featured">
-                      Featured
-                    </span>
-                  )}
+              {Array.from(
+                { length: totalPages },
+                (_, index) => index + 1
+              ).map((pageNumber) => (
+                <button
+                  type="button"
+                  key={pageNumber}
+                  className={page === pageNumber ? "current-page" : ""}
+                  onClick={() => setPage(pageNumber)}
+                >
+                  {pageNumber}
+                </button>
+              ))}
 
-                  <button
-                    type="button"
-                    aria-label={`Add ${
-                      hotel.hotelName || "hotel"
-                    } to favorites`}
-                    onClick={() => handleFavorite(hotel)}
-                    className="hotel-card__favorite"
-                  >
-                    <Heart size={19} />
-                  </button>
+              <button
+                type="button"
+                disabled={page === totalPages}
+                onClick={() => setPage((previous) => previous + 1)}
+                aria-label="Next page"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </nav>
+          )}
+        </div>
+      </section>
 
-                  {hotel.starRating && (
-                    <div className="hotel-card__rating">
-                      <Star
-                        size={13}
-                        className="hotel-card__rating-star"
-                      />
-                      <span className="text-amber-50">{hotel.starRating}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* DETAILS */}
-                <div className="hotel-card__body">
-                  <div className="hotel-card__details">
-                    <div className="hotel-card__meta">
-                      <span className="hotel-card__location">
-                        <MapPin size={15} />
-
-                        <span>
-                          {[
-                            hotel.city,
-                            hotel.country,
-                          ]
-                            .filter(Boolean)
-                            .join(", ") ||
-                            "Location unavailable"}
-                        </span>
-                      </span>
-
-                      {hotel.verified === true && (
-                        <span className="hotel-card__verified">
-                          Verified
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="hotel-card__title">
-                      {hotel.hotelName || "Unnamed Hotel"}
-                    </h3>
-
-                    {hotel.address && (
-                      <p className="hotel-card__address">
-                        {hotel.address}
-                      </p>
-                    )}
-
-                    {hotel.description && (
-                      <p className="hotel-card__description">
-                        {hotel.description}
-                      </p>
-                    )}
-
-                    <div className="hotel-card__amenities">
-                      {amenities.slice(0, 3).map((amenity) => (
-                        <span
-                          key={amenity}
-                          className="hotel-card__amenity"
-                        >
-                          {amenity}
-                        </span>
-                      ))}
-
-                      {amenities.length > 3 && (
-                        <span className="hotel-card__amenity">
-                          +{amenities.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* PRICE */}
-                  <div className="hotel-card__footer">
-                    <div className="hotel-card__price-block">
-                      <span className="hotel-card__price-label">
-                        Starting from
-                      </span>
-
-                      <div className="hotel-card__price-row">
-                        <span className="hotel-card__price">
-                          {formatPrice(hotel.price)}
-                        </span>
-
-                        <span className="hotel-card__per-night">
-                          / night
-                        </span>
-                      </div>
-                    </div>
-
-                    <Link
-                      href={`/dashboard/hoteldetails/${hotelId}`}
-                      className="hotel-card__link"
-                    >
-                      View Hotel
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+      <section className="resort-promises">
+        <div>
+          <ShieldCheck size={29} />
+          <span>
+            <strong>Secure Booking</strong>
+            <small>Your data is always protected</small>
+          </span>
         </div>
 
-        {/* INFINITE SCROLL TRIGGER */}
-        {!error && hasMore && (
-          <div
-            ref={loadMoreRef}
-            className="nearby-hotels__load-more"
-          >
-            {loadingMore && (
-              <>
-                <LoaderCircle
-                  size={20}
-                  className="nearby-hotels__spinner"
-                />
-                <span>Loading more hotels...</span>
-              </>
-            )}
-          </div>
-        )}
+        <div>
+          <Headset size={29} />
+          <span>
+            <strong>24/7 Customer Support</strong>
+            <small>We're here to help anytime</small>
+          </span>
+        </div>
 
-        {/* LOAD-MORE ERROR */}
-        {error && hotels.length > 0 && (
-          <div className="nearby-hotels__retry">
-            <p>{error}</p>
+        <div>
+          <Star size={29} />
+          <span>
+            <strong>Best Price Guarantee</strong>
+            <small>Find a lower price? Let us know</small>
+          </span>
+        </div>
+      </section>
 
-            <button
-              type="button"
-              onClick={() => fetchHotels(true)}
-              className="nearby-hotels__button"
-            >
-              Retry loading
-            </button>
-          </div>
-        )}
-
-        {/* END OF COLLECTION */}
-        {!loading && !hasMore && hotels.length > 0 && (
-          <p className="nearby-hotels__end">
-            You've reached the end of the hotels list.
-          </p>
-        )}
-      </div>
-    </section>
+      <footer className="resorts-footer">
+        <p>
+          © {new Date().getFullYear()} HotelReserve. All rights reserved.
+        </p>
+        <div>
+          <Link href="/pages/about">About</Link>
+          <Link href="/pages/contact">Contact</Link>
+          <Link href="/pages/privacy">Privacy Policy</Link>
+        </div>
+      </footer>
     </main>
   );
 }
+

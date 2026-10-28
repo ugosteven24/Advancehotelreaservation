@@ -1,544 +1,762 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
-import "./dashboard.css";
-import PopularHotels from "./component/popularhotels"
-import { getUserId } from "@/lib/session";
-import Location from "../location/location"
-export default function ClientDashboard() {
-    const [favorites, setFavorites] = useState([1, 2, 3, 4, 5]);
-    const [activeMenu, setActiveMenu] = useState("Dashboard");
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-
-    const [userId, setUserId] = useState(null);
-    const stays = [
-        {
-            id: 1,
-            name: "Aegean Horizon Villa",
-            location: "Santorini, Greece",
-            price: "$1,250",
-            rating: "4.9",
-            image:
-                "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1000&q=85",
-        },
-        {
-            id: 2,
-            name: "Skyline Summit",
-            location: "Tokyo, Japan",
-            price: "$890",
-            rating: "4.8",
-            image:
-                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85",
-        },
-        {
-            id: 3,
-            name: "Verdant Canopy Lodge",
-            location: "Arenal, Costa Rica",
-            price: "$650",
-            rating: "5.0",
-            image:
-                "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=1000&q=85",
-        },
-        {
-            id: 4,
-            name: "Verdant Canopy Lodge",
-            location: "Arenal, Costa Rica",
-            price: "$650",
-            rating: "5.0",
-            image:
-                "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=1000&q=85",
-        },
-        {
-            id: 5,
-            name: "Verdant Canopy Lodge",
-            location: "Arenal, Costa Rica",
-            price: "$650",
-            rating: "5.0",
-            image:
-                "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=1000&q=85",
-        },
-    ];
-    const upcomingBooking = {
-        hotel: "Grand Plaza Resort & Spa",
-        location: "Bora Bora, French Polynesia",
-        checkIn: "Oct 12, 3:00 PM",
-        checkOut: "Oct 19, 11:00 AM",
-        guests: "2 Adults",
-        roomType: "Ocean Villa",
-        confirmation: "#LXP-8924-M",
-        image: "/images/gallery.jpg",
-        daysUntil: "In 14 Days",
-    };
-
-
-    const pastStays = [
-        {
-            hotel: "The Metropolitan Hotel",
-            location: "New York, USA",
-            dates: "Sep 01 - Sep 05, 2023",
-            reference: "#LXP-7102-K",
-            total: "$1,250.00",
-        },
-        {
-            hotel: "Alpine Retreat Lodge",
-            location: "Zermatt, Switzerland",
-            dates: "Feb 14 - Feb 20, 2023",
-            reference: "#LXP-6551-A",
-            total: "$3,400.00",
-        },
-        {
-            hotel: "Oasis Desert Resort",
-            location: "Dubai, UAE",
-            dates: "Nov 10 - Nov 15, 2022",
-            reference: "#LXP-5022-D",
-            total: "$2,800.00",
-        },
-    ];
-
-
-    const offers = [
-        {
-            title: "Spa Package Upgrade",
-            description: "Available for next trip",
-            image: "/images/gallery1.jpg",
-        },
-        {
-            title: "Complimentary Dinner",
-            description: "Redeem 10k points",
-            image: "/images/gallery1.jpg",
-        },
-    ];
-
-    useEffect(() => {
-        getUserId().then(setUserId);
-    }, []);
-    return (
-        <>
-            <header className="client-header">
-
-
-
-                <div>
-                    {/*  ///////////////////GET THE USER LOCATION////////////////*/}
-                    <Location />
-
-                    <h1>
-                        Welcome back, Sarah
-                    </h1>
-
-                    <p>
-                        Here is an overview of your stays.
-                    </p>
-
-
-
-                </div>
-
-
-                <button className="new-booking-btn">
-
-                    <i className="fas fa-plus"></i>
-
-                    New Booking
-
-                </button>
-
-            </header>
-
-
-            {/* ===================================================
-            TOP CONTENT
-        =================================================== */}
-
-            <section className="dashboard-top">
-
-
-
-                {/* UPCOMING BOOKING */}
-
-                <div className="upcoming-card">
-
-                    <div className="booking-image">
-
-                        <img
-                            src={upcomingBooking.image}
-                            alt={upcomingBooking.hotel}
-                        />
-
-
-                        <div className="booking-countdown">
-
-                            <i className="far fa-clock"></i>
-
-                            {upcomingBooking.daysUntil}
-
-                        </div>
-
-
-                        <div className="image-booking-info">
-
-                            <span>
-                                UPCOMING STAY
-                            </span>
-
-                            <strong>
-                                Bungalow 124
-                            </strong>
-
-                            <small>
-                                Arrival: Oct 15
-                            </small>
-
-                            <small>
-                                Departure: Oct 22
-                            </small>
-
-                            <button>
-                                Manage Reservation
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-                    <div className="booking-content">
-
-                        <div className="booking-heading">
-
-                            <div>
-
-                                <span className="section-label">
-                                    Upcoming Trip
-                                </span>
-
-                                <h2>
-                                    {upcomingBooking.hotel}
-                                </h2>
-
-                                <p className="booking-location">
-
-                                    <i className="fas fa-map-marker-alt"></i>
-
-                                    {upcomingBooking.location}
-
-                                </p>
-
-                            </div>
-
-
-                            <div className="confirmation-box">
-
-                                <span>
-                                    Confirmation
-                                </span>
-
-                                <strong>
-                                    {upcomingBooking.confirmation}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-
-                        {/* <div className="booking-details">
-                            <div>
-                                <span>Check-in</span>
-                                <input
-                                    type="date"
-                                    value={upcomingBooking.checkIn}
-                                    name="checkIn"
-                                   
-                                />
-                            </div>
-
-                            <div>
-                                <span>Check-out</span>
-                                <input
-                                    type="date"
-                                    value={upcomingBooking.checkOut}
-                                    name="checkOut"
-                                />
-                            </div>
-
-                            <div>
-                                <span>Guests</span>
-                                <input
-                                    type="number"
-                                    value={upcomingBooking.guests}
-                                    
-                                />
-                            </div>
-
-                            <div>
-                                <span>Room Type</span>
-                                <input
-                                    type="text"
-                                    value={upcomingBooking.roomType}
-                                    readOnly
-                                />
-                            </div>
-                        </div> */}
-
-
-                        <div className="booking-actions">
-
-                            <button className="primary-btn">
-                                View Details
-                            </button>
-
-                            <button className="secondary-btn">
-                                Modify
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                {/* RIGHT COLUMN */}
-
-                <div className="dashboard-right">
-
-
-                    {/* LOYALTY */}
-
-                    <div className="loyalty-card">
-
-                        <div className="loyalty-watermark">
-                            T
-                        </div>
-
-                        <span className="loyalty-label">
-                            Luxe Club Status
-                        </span>
-
-                        <h2>
-                            Platinum
-                        </h2>
-
-                        <strong>
-                            45,200 Points
-                        </strong>
-
-                        <div className="progress-container">
-
-                            <div className="progress-bar"></div>
-
-                        </div>
-
-                        <span className="points-next">
-                            4,800 to Diamond
-                        </span>
-
-                    </div>
-
-
-                    {/* OFFERS */}
-
-                    <div className="offers-card">
-
-                        <h2>
-                            Recent Offers
-                        </h2>
-
-
-                        {offers.map((offer, index) => (
-
-                            <div
-                                className="offer-item"
-                                key={index}
-                            >
-
-                                <img
-                                    src={offer.image}
-                                    alt={offer.title}
-                                />
-
-                                <div className="offer-content">
-
-                                    <strong>
-                                        {offer.title}
-                                    </strong>
-
-                                    <span>
-                                        {offer.description}
-                                    </span>
-
-                                </div>
-
-                                <i className="fas fa-chevron-right"></i>
-
-                            </div>
-
-                        ))}
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            {/* ===================================================
-            PAST STAYS
-        =================================================== */}
-
-
-            <h2 className="nearbyhotels">Nearby hotels</h2>
-
-
-            <PopularHotels />
-            <section className="cards">
-                {stays.map((stay) => {
-                    const isFavorite = favorites.includes(stay.id);
-
-                    return (
-                        <article className="card" key={stay.id}>
-                            <div className="image-wrapper">
-                                <img src={stay.image} alt={stay.name} />
-
-                                <button
-                                    className={`favorite-button ${isFavorite ? "active" : ""
-                                        }`}
-                                    onClick={() => toggleFavorite(stay.id)}
-                                    aria-label={
-                                        isFavorite
-                                            ? `Remove ${stay.name} from favorites`
-                                            : `Add ${stay.name} to favorites`
-                                    }
-                                >
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        width="23"
-                                        height="23"
-                                        fill={isFavorite ? "currentColor" : "none"}
-                                        stroke="currentColor"
-                                        strokeWidth="1.8"
-                                    >
-                                        <path
-                                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
-                                        />
-                                    </svg>
-                                </button>
-
-                                <span className="price">{stay.price} / night</span>
-                            </div>
-
-                            <div className="card-content">
-                                <div className="title-row">
-                                    <h2>{stay.name}</h2>
-
-                                    <div className="rating">
-                                        <span>★</span>
-                                        {stay.rating}
-                                    </div>
-                                </div>
-
-                                <div className="location">
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                    >
-                                        <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
-                                        <circle cx="12" cy="10" r="2.5" />
-                                    </svg>
-
-                                    <span>{stay.location}</span>
-                                </div>
-
-                                <button className="book-button">Book Now</button>
-                            </div>
-                        </article>
-                    );
-                })}
-            </section>
-            <section className="past-stays-card">
-
-                <div className="past-stays-header">
-
-                    <h2>
-                        Past Stays
-                    </h2>
-
-                    <button>
-                        View All
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  Search,
+  MapPin,
+  CalendarDays,
+  Users,
+  Heart,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  Waves,
+  Wifi,
+  Utensils,
+  Dumbbell,
+  ShieldCheck,
+  Headset,
+  Star,
+  Menu,
+  X,
+} from "lucide-react";
+import ProfileImage from "./component/profileImage";
+import "./resorts.css";
+
+const resorts = [
+  {
+    id: 1,
+    name: "Maldives Island Resort",
+    location: "Maldives",
+    country: "Maldives",
+    type: "Beach Resort",
+    price: 450,
+    rating: 4.8,
+    reviews: 124,
+    badge: "Popular",
+    badgeType: "popular",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 2,
+    name: "Santorini Cliff Resort",
+    location: "Santorini, Greece",
+    country: "Greece",
+    type: "Beach Resort",
+    price: 320,
+    rating: 4.6,
+    reviews: 98,
+    badge: "Best Value",
+    badgeType: "value",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant"],
+    image:
+      "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 3,
+    name: "Bali Beach Resort & Spa",
+    location: "Bali, Indonesia",
+    country: "Indonesia",
+    type: "Beach Resort",
+    price: 280,
+    rating: 4.9,
+    reviews: 176,
+    badge: "Luxury",
+    badgeType: "luxury",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 4,
+    name: "Lake Como Resort",
+    location: "Lake Como, Italy",
+    country: "Italy",
+    type: "Mountain Resort",
+    price: 390,
+    rating: 4.5,
+    reviews: 87,
+    badge: "Trending",
+    badgeType: "trending",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 5,
+    name: "Phuket Island Resort",
+    location: "Phuket, Thailand",
+    country: "Thailand",
+    type: "Island Resort",
+    price: 260,
+    rating: 4.7,
+    reviews: 112,
+    badge: "Family Friendly",
+    badgeType: "family",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Fitness Center"],
+    image:
+      "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 6,
+    name: "Seychelles Resort & Spa",
+    location: "Seychelles",
+    country: "Seychelles",
+    type: "Beach Resort",
+    price: 520,
+    rating: 4.8,
+    reviews: 143,
+    badge: "Romantic",
+    badgeType: "romantic",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1000&q=85",
+  },
+];
+
+const resortTypes = [
+  "Beach Resort",
+  "Mountain Resort",
+  "Island Resort",
+  "All-Inclusive",
+  "Wellness Resort",
+  "Family Resort",
+];
+
+const amenityOptions = [
+  { label: "Swimming Pool", value: "Pool" },
+  { label: "Spa & Wellness", value: "Spa" },
+  { label: "Free WiFi", value: "WiFi" },
+  { label: "Restaurant", value: "Restaurant" },
+  { label: "Fitness Center", value: "Fitness Center" },
+  { label: "Beach Access", value: "Beach Access" },
+];
+
+const amenityIcons = {
+  Pool: Waves,
+  Spa: Waves,
+  WiFi: Wifi,
+  Restaurant: Utensils,
+  "Fitness Center": Dumbbell,
+  "Beach Access": Waves,
+};
+
+export default function ResortsPage() {
+  const [destination, setDestination] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [guests, setGuests] = useState("2 Adults, 0 Children");
+
+  const [maxPrice, setMaxPrice] = useState(1000);
+  const [ratings, setRatings] = useState([5]);
+  const [types, setTypes] = useState(["Beach Resort"]);
+  const [amenities, setAmenities] = useState([
+    "Pool",
+    "WiFi",
+  ]);
+
+  const [sortBy, setSortBy] = useState("popular");
+  const [favorites, setFavorites] = useState([]);
+  const [page, setPage] = useState(1);
+  const [mobileFiltersOpen, setMobileFiltersOpen] =
+    useState(false);
+
+  const pageSize = 6;
+
+  const filteredResorts = useMemo(() => {
+    let result = resorts.filter((resort) => {
+      const term = searchTerm.trim().toLowerCase();
+
+      const matchesDestination =
+        !term ||
+        resort.name.toLowerCase().includes(term) ||
+        resort.location.toLowerCase().includes(term) ||
+        resort.country.toLowerCase().includes(term);
+
+      const matchesPrice = resort.price <= maxPrice;
+
+      const matchesRating =
+        ratings.length === 0 ||
+        ratings.some((rating) => resort.rating >= rating - 0.9);
+
+      const matchesType =
+        types.length === 0 ||
+        types.includes(resort.type);
+
+      const matchesAmenities = amenities.every((amenity) =>
+        resort.amenities.includes(amenity)
+      );
+
+      return (
+        matchesDestination &&
+        matchesPrice &&
+        matchesRating &&
+        matchesType &&
+        matchesAmenities
+      );
+    });
+
+    if (sortBy === "price-low") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-high") {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "rating") {
+      result.sort((a, b) => b.rating - a.rating);
+    } else {
+      result.sort((a, b) => b.reviews - a.reviews);
+    }
+
+    return result;
+  }, [searchTerm, maxPrice, ratings, types, amenities, sortBy]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredResorts.length / pageSize)
+  );
+
+  const visibleResorts = filteredResorts.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
+
+  function toggleValue(value, values, setValues) {
+    setValues(
+      values.includes(value)
+        ? values.filter((item) => item !== value)
+        : [...values, value]
+    );
+    setPage(1);
+  }
+
+  function handleSearch(event) {
+    event.preventDefault();
+    setSearchTerm(destination);
+    setPage(1);
+  }
+
+  function clearFilters() {
+    setMaxPrice(1000);
+    setRatings([]);
+    setTypes([]);
+    setAmenities([]);
+    setDestination("");
+    setSearchTerm("");
+    setPage(1);
+  }
+
+  function toggleFavorite(id) {
+    setFavorites((previous) =>
+      previous.includes(id)
+        ? previous.filter((item) => item !== id)
+        : [...previous, id]
+    );
+  }
+
+  return (
+    <main className="resorts-page">
+      <header className="resorts-header">
+        <Link href="/" className="resorts-brand">
+          <span className="brand-mark">
+            <Waves size={25} />
+          </span>
+          <span>
+            <strong>HotelReserve</strong>
+            <small>Stay Better. Travel Further.</small>
+          </span>
+        </Link>
+
+        <nav className="resorts-nav">
+          <Link href="/dashboard" className="active">Home</Link>
+          <Link href="/dashboard/explore">Explore</Link>
+    
+          <Link href="/dashboard/favorites">Favorites</Link>
+          <Link href="/dashboard/mybooking">My-booking</Link>
+          <Link href="/dashboard/notification">Notification</Link>
+          <Link href="/dashboard/profile">Profile</Link>
+        </nav>
+
+        <div className="header-actions">
+          <button
+            type="button"
+            className="header-icon"
+            aria-label="Open search"
+            onClick={() =>
+              document
+                .getElementById("resort-search")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            <Search size={20} />
+          </button>
+
+          <Link
+            href="/favorites"
+            className="header-icon"
+            aria-label="Favorites"
+          >
+            <Heart size={20} />
+            {favorites.length > 0 && (
+              <span className="favorite-count">
+                {favorites.length}
+              </span>
+            )}
+          </Link>
+
+          <Link href="/login" className="signin-link">
+            <ProfileImage/>
+            <span>Sign Out </span>
+          </Link>
+
+          <Link href="/my-bookings" className="bookings-button">
+            My Bookings
+          </Link>
+        </div>
+      </header>
+
+      <section className="resort-hero">
+        <div className="hero-overlay" />
+
+        <div className="hero-content">
+          <span className="hero-label">
+            <Waves size={15} />
+            Exclusive Resorts
+          </span>
+
+          <h1>
+            Discover the World’s
+            <br />
+            Most Beautiful Resorts
+          </h1>
+
+          <p>
+            Luxurious stays. Breathtaking views. Unforgettable
+            experiences.
+            <br className="desktop-break" />
+            Find your perfect resort getaway with HotelReserve.
+          </p>
+        </div>
+      </section>
+
+      <section
+        className="resort-search-wrap"
+        id="resort-search"
+      >
+        <form className="resort-search" onSubmit={handleSearch}>
+          <label className="search-field destination-field">
+            <MapPin size={21} />
+            <span>
+              <strong>Destination</strong>
+              <input
+                type="text"
+                placeholder="Where do you want to go?"
+                value={destination}
+                onChange={(event) =>
+                  setDestination(event.target.value)
+                }
+              />
+            </span>
+          </label>
+
+          <label className="search-field">
+            <CalendarDays size={21} />
+            <span>
+              <strong>Check In</strong>
+              <input
+                type="date"
+                value={checkIn}
+                onChange={(event) =>
+                  setCheckIn(event.target.value)
+                }
+              />
+            </span>
+          </label>
+
+          <label className="search-field">
+            <CalendarDays size={21} />
+            <span>
+              <strong>Check Out</strong>
+              <input
+                type="date"
+                min={checkIn || undefined}
+                value={checkOut}
+                onChange={(event) =>
+                  setCheckOut(event.target.value)
+                }
+              />
+            </span>
+          </label>
+
+          <label className="search-field guests-field">
+            <Users size={21} />
+            <span>
+              <strong>Guests</strong>
+              <select
+                value={guests}
+                onChange={(event) =>
+                  setGuests(event.target.value)
+                }
+              >
+                <option>1 Adult, 0 Children</option>
+                <option>2 Adults, 0 Children</option>
+                <option>2 Adults, 1 Child</option>
+                <option>2 Adults, 2 Children</option>
+                <option>4 Adults, 0 Children</option>
+              </select>
+            </span>
+            <ChevronDown size={15} />
+          </label>
+
+          <button className="search-resorts-button" type="submit">
+            <Search size={18} />
+            Search Resorts
+          </button>
+        </form>
+      </section>
+
+      <section className="resorts-main">
+        <button
+          className="mobile-filter-toggle"
+          type="button"
+          onClick={() =>
+            setMobileFiltersOpen((previous) => !previous)
+          }
+        >
+          {mobileFiltersOpen ? <X size={18} /> : <SlidersHorizontal size={18} />}
+          {mobileFiltersOpen ? "Close Filters" : "Filters"}
+        </button>
+
+        <aside
+          className={`resort-filters ${
+            mobileFiltersOpen ? "filters-open" : ""
+          }`}
+        >
+          <div className="filter-heading">
+            <h2>
+              <SlidersHorizontal size={17} />
+              Filters
+            </h2>
+            <button type="button" onClick={clearFilters}>
+              Clear all
+            </button>
+          </div>
+
+          <div className="filter-section">
+            <h3>Price per night</h3>
+
+            <input
+              className="price-slider"
+              type="range"
+              min="50"
+              max="1000"
+              step="10"
+              value={maxPrice}
+              onChange={(event) => {
+                setMaxPrice(Number(event.target.value));
+                setPage(1);
+              }}
+              aria-label="Maximum price per night"
+            />
+
+            <div className="price-labels">
+              <span>$50</span>
+              <strong>${maxPrice.toLocaleString()} max</strong>
+            </div>
+          </div>
+
+          <div className="filter-section">
+            <h3>Star Rating</h3>
+
+            {[5, 4, 3, 2, 1].map((rating) => (
+              <label className="filter-option" key={rating}>
+                <input
+                  type="checkbox"
+                  checked={ratings.includes(rating)}
+                  onChange={() =>
+                    toggleValue(rating, ratings, setRatings)
+                  }
+                />
+                <span>{rating} Star</span>
+                <span className="rating-stars">
+                  {"★".repeat(rating)}
+                  <span className="empty-stars">
+                    {"★".repeat(5 - rating)}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+
+          <div className="filter-section">
+            <h3>Resort Type</h3>
+
+            {resortTypes.map((type) => (
+              <label className="filter-option" key={type}>
+                <input
+                  type="checkbox"
+                  checked={types.includes(type)}
+                  onChange={() =>
+                    toggleValue(type, types, setTypes)
+                  }
+                />
+                <span>{type}</span>
+              </label>
+            ))}
+          </div>
+
+          <div className="filter-section">
+            <h3>Amenities</h3>
+
+            {amenityOptions.map((amenity) => (
+              <label
+                className="filter-option"
+                key={amenity.value}
+              >
+                <input
+                  type="checkbox"
+                  checked={amenities.includes(amenity.value)}
+                  onChange={() =>
+                    toggleValue(
+                      amenity.value,
+                      amenities,
+                      setAmenities
+                    )
+                  }
+                />
+                <span>{amenity.label}</span>
+              </label>
+            ))}
+          </div>
+
+          <button
+            className="apply-filters-button"
+            type="button"
+            onClick={() => setMobileFiltersOpen(false)}
+          >
+            Apply Filters
+          </button>
+        </aside>
+
+        <div className="resorts-results">
+          <div className="results-heading">
+            <div>
+              <h2>Best Resorts</h2>
+              <p>
+                Showing {visibleResorts.length} of{" "}
+                {filteredResorts.length} resorts
+              </p>
+            </div>
+
+            <label className="sort-control">
+              <span>Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(event) => {
+                  setSortBy(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="popular">Popularity</option>
+                <option value="rating">Highest Rated</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+              <ChevronDown size={15} />
+            </label>
+          </div>
+
+          {visibleResorts.length > 0 ? (
+            <div className="resorts-grid">
+              {visibleResorts.map((resort) => (
+                <article className="resort-card" key={resort.id}>
+                  <div className="resort-image-wrap">
+                    <img
+                      src={resort.image}
+                      alt={resort.name}
+                      className="resort-image"
+                      loading="lazy"
+                    />
+
+                    <span
+                      className={`resort-badge ${resort.badgeType}`}
+                    >
+                      {resort.badge}
+                    </span>
+
+                    <button
+                      type="button"
+                      className={`favorite-button ${
+                        favorites.includes(resort.id)
+                          ? "is-favorite"
+                          : ""
+                      }`}
+                      aria-label={
+                        favorites.includes(resort.id)
+                          ? "Remove from favorites"
+                          : "Add to favorites"
+                      }
+                      onClick={() => toggleFavorite(resort.id)}
+                    >
+                      <Heart
+                        size={19}
+                        fill={
+                          favorites.includes(resort.id)
+                            ? "currentColor"
+                            : "none"
+                        }
+                      />
                     </button>
 
-                </div>
+                    <span className="image-rating">
+                      <Star size={13} fill="currentColor" />
+                      {resort.rating}
+                      <span>({resort.reviews})</span>
+                    </span>
+                  </div>
 
+                  <div className="resort-card-body">
+                    <h3>{resort.name}</h3>
 
-                <div className="past-stays-table">
+                    <p className="resort-location">
+                      <MapPin size={14} />
+                      {resort.location}
+                      <span>·</span>
+                      {resort.type}
+                    </p>
 
-                    <div className="table-row table-heading">
+                    <div className="resort-amenities">
+                      {resort.amenities.slice(0, 4).map((amenity) => {
+                        const Icon = amenityIcons[amenity] || Waves;
 
-                        <span>Property</span>
-                        <span>Dates</span>
-                        <span>Booking Ref</span>
-                        <span>Total</span>
-                        <span>Action</span>
-
+                        return (
+                          <span key={amenity} title={amenity}>
+                            <Icon size={14} />
+                            {amenity === "Fitness Center"
+                              ? "Fitness"
+                              : amenity}
+                          </span>
+                        );
+                      })}
                     </div>
 
+                    <div className="resort-card-bottom">
+                      <div className="resort-price">
+                        <strong>
+                          ${resort.price.toLocaleString()}
+                        </strong>
+                        <span>/ night</span>
+                      </div>
 
-                    {pastStays.map((stay, index) => (
+                      <Link
+                        href={`/pages/resorts/${resort.id}`}
+                        className="view-details-button"
+                      >
+                        View Details
+                        <ArrowRight size={15} />
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="no-resorts">
+              <Search size={34} />
+              <h3>No resorts found</h3>
+              <p>
+                Try another destination or remove some filters.
+              </p>
+              <button
+                type="button"
+                className="view-details-button"
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
 
-                        <div
-                            className="table-row"
-                            key={index}
-                        >
+          {filteredResorts.length > pageSize && (
+            <nav className="resort-pagination" aria-label="Pagination">
+              <button
+                type="button"
+                disabled={page === 1}
+                onClick={() => setPage((previous) => previous - 1)}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={18} />
+              </button>
 
-                            <div className="property-column">
+              {Array.from(
+                { length: totalPages },
+                (_, index) => index + 1
+              ).map((pageNumber) => (
+                <button
+                  type="button"
+                  key={pageNumber}
+                  className={page === pageNumber ? "current-page" : ""}
+                  onClick={() => setPage(pageNumber)}
+                >
+                  {pageNumber}
+                </button>
+              ))}
 
-                                <strong>
-                                    {stay.hotel}
-                                </strong>
+              <button
+                type="button"
+                disabled={page === totalPages}
+                onClick={() => setPage((previous) => previous + 1)}
+                aria-label="Next page"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </nav>
+          )}
+        </div>
+      </section>
 
-                                <span>
-                                    {stay.location}
-                                </span>
+      <section className="resort-promises">
+        <div>
+          <ShieldCheck size={29} />
+          <span>
+            <strong>Secure Booking</strong>
+            <small>Your data is always protected</small>
+          </span>
+        </div>
 
-                            </div>
+        <div>
+          <Headset size={29} />
+          <span>
+            <strong>24/7 Customer Support</strong>
+            <small>We're here to help anytime</small>
+          </span>
+        </div>
 
+        <div>
+          <Star size={29} />
+          <span>
+            <strong>Best Price Guarantee</strong>
+            <small>Find a lower price? Let us know</small>
+          </span>
+        </div>
+      </section>
 
-                            <span>
-                                {stay.dates}
-                            </span>
-
-
-                            <span>
-                                {stay.reference}
-                            </span>
-
-
-                            <strong>
-                                {stay.total}
-                            </strong>
-
-
-                            <button className="receipt-btn">
-                                Receipt
-                            </button>
-
-                        </div>
-
-                    ))}
-
-                </div>
-
-            </section>
-
-
-
-
-
-        </>
-    );
+      <footer className="resorts-footer">
+        <p>
+          © {new Date().getFullYear()} HotelReserve. All rights reserved.
+        </p>
+        <div>
+          <Link href="/pages/about">About</Link>
+          <Link href="/pages/contact">Contact</Link>
+          <Link href="/pages/privacy">Privacy Policy</Link>
+        </div>
+      </footer>
+    </main>
+  );
 }
+

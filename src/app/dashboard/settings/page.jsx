@@ -1,318 +1,763 @@
+
 "use client";
 
-import { useState } from "react";
-import "./settings.css";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  Search,
+  MapPin,
+  CalendarDays,
+  Users,
+  Heart,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  Waves,
+  Wifi,
+  Utensils,
+  Dumbbell,
+  ShieldCheck,
+  Headset,
+  Star,
+  Menu,
+  X,
+} from "lucide-react";
 
-export default function AccountSettings() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+import "./resorts.css";
 
-  const [settings, setSettings] = useState({
-    email: true,
-    sms: false,
-    marketing: false,
-    dataSharing: false,
-  });
+const resorts = [
+  {
+    id: 1,
+    name: "Maldives Island Resort",
+    location: "Maldives",
+    country: "Maldives",
+    type: "Beach Resort",
+    price: 450,
+    rating: 4.8,
+    reviews: 124,
+    badge: "Popular",
+    badgeType: "popular",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 2,
+    name: "Santorini Cliff Resort",
+    location: "Santorini, Greece",
+    country: "Greece",
+    type: "Beach Resort",
+    price: 320,
+    rating: 4.6,
+    reviews: 98,
+    badge: "Best Value",
+    badgeType: "value",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant"],
+    image:
+      "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 3,
+    name: "Bali Beach Resort & Spa",
+    location: "Bali, Indonesia",
+    country: "Indonesia",
+    type: "Beach Resort",
+    price: 280,
+    rating: 4.9,
+    reviews: 176,
+    badge: "Luxury",
+    badgeType: "luxury",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 4,
+    name: "Lake Como Resort",
+    location: "Lake Como, Italy",
+    country: "Italy",
+    type: "Mountain Resort",
+    price: 390,
+    rating: 4.5,
+    reviews: 87,
+    badge: "Trending",
+    badgeType: "trending",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 5,
+    name: "Phuket Island Resort",
+    location: "Phuket, Thailand",
+    country: "Thailand",
+    type: "Island Resort",
+    price: 260,
+    rating: 4.7,
+    reviews: 112,
+    badge: "Family Friendly",
+    badgeType: "family",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Fitness Center"],
+    image:
+      "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1000&q=85",
+  },
+  {
+    id: 6,
+    name: "Seychelles Resort & Spa",
+    location: "Seychelles",
+    country: "Seychelles",
+    type: "Beach Resort",
+    price: 520,
+    rating: 4.8,
+    reviews: 143,
+    badge: "Romantic",
+    badgeType: "romantic",
+    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
+    image:
+      "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1000&q=85",
+  },
+];
 
-  const [saved, setSaved] = useState(false);
+const resortTypes = [
+  "Beach Resort",
+  "Mountain Resort",
+  "Island Resort",
+  "All-Inclusive",
+  "Wellness Resort",
+  "Family Resort",
+];
 
-  const toggleSetting = (name) => {
-    setSettings((prev) => ({
-      ...prev,
-      [name]: !prev[name],
-    }));
+const amenityOptions = [
+  { label: "Swimming Pool", value: "Pool" },
+  { label: "Spa & Wellness", value: "Spa" },
+  { label: "Free WiFi", value: "WiFi" },
+  { label: "Restaurant", value: "Restaurant" },
+  { label: "Fitness Center", value: "Fitness Center" },
+  { label: "Beach Access", value: "Beach Access" },
+];
 
-    setSaved(false);
-  };
+const amenityIcons = {
+  Pool: Waves,
+  Spa: Waves,
+  WiFi: Wifi,
+  Restaurant: Utensils,
+  "Fitness Center": Dumbbell,
+  "Beach Access": Waves,
+};
 
-  const handleSave = () => {
-    setSaved(true);
+export default function ResortsPage() {
+  const [destination, setDestination] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [guests, setGuests] = useState("2 Adults, 0 Children");
 
-    setTimeout(() => {
-      setSaved(false);
-    }, 2500);
-  };
+  const [maxPrice, setMaxPrice] = useState(1000);
+  const [ratings, setRatings] = useState([5]);
+  const [types, setTypes] = useState(["Beach Resort"]);
+  const [amenities, setAmenities] = useState([
+    "Pool",
+    "WiFi",
+  ]);
 
-  const handleDownload = () => {
-    alert("Your data download has been requested.");
-  };
+  const [sortBy, setSortBy] = useState("popular");
+  const [favorites, setFavorites] = useState([]);
+  const [page, setPage] = useState(1);
+  const [mobileFiltersOpen, setMobileFiltersOpen] =
+    useState(false);
 
-  const handlePassword = () => {
-    alert("Password change flow opened.");
-  };
+  const pageSize = 6;
 
-  const handle2FA = () => {
-    alert("Two-factor authentication setup opened.");
-  };
+  const filteredResorts = useMemo(() => {
+    let result = resorts.filter((resort) => {
+      const term = searchTerm.trim().toLowerCase();
 
-  const handleDelete = () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to permanently delete your account?"
-    );
+      const matchesDestination =
+        !term ||
+        resort.name.toLowerCase().includes(term) ||
+        resort.location.toLowerCase().includes(term) ||
+        resort.country.toLowerCase().includes(term);
 
-    if (confirmed) {
-      alert("Account deletion requested.");
+      const matchesPrice = resort.price <= maxPrice;
+
+      const matchesRating =
+        ratings.length === 0 ||
+        ratings.some((rating) => resort.rating >= rating - 0.9);
+
+      const matchesType =
+        types.length === 0 ||
+        types.includes(resort.type);
+
+      const matchesAmenities = amenities.every((amenity) =>
+        resort.amenities.includes(amenity)
+      );
+
+      return (
+        matchesDestination &&
+        matchesPrice &&
+        matchesRating &&
+        matchesType &&
+        matchesAmenities
+      );
+    });
+
+    if (sortBy === "price-low") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-high") {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "rating") {
+      result.sort((a, b) => b.rating - a.rating);
+    } else {
+      result.sort((a, b) => b.reviews - a.reviews);
     }
-  };
+
+    return result;
+  }, [searchTerm, maxPrice, ratings, types, amenities, sortBy]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredResorts.length / pageSize)
+  );
+
+  const visibleResorts = filteredResorts.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
+
+  function toggleValue(value, values, setValues) {
+    setValues(
+      values.includes(value)
+        ? values.filter((item) => item !== value)
+        : [...values, value]
+    );
+    setPage(1);
+  }
+
+  function handleSearch(event) {
+    event.preventDefault();
+    setSearchTerm(destination);
+    setPage(1);
+  }
+
+  function clearFilters() {
+    setMaxPrice(1000);
+    setRatings([]);
+    setTypes([]);
+    setAmenities([]);
+    setDestination("");
+    setSearchTerm("");
+    setPage(1);
+  }
+
+  function toggleFavorite(id) {
+    setFavorites((previous) =>
+      previous.includes(id)
+        ? previous.filter((item) => item !== id)
+        : [...previous, id]
+    );
+  }
 
   return (
-    <main className={darkMode ? "app dark" : "app"}>
-      {/* Mobile Header */}
-      <header className="mobile-header">
-        <div className="mobile-left">
+    <main className="resorts-page">
+      <header className="resorts-header">
+        <Link href="/" className="resorts-brand">
+          <span className="brand-mark">
+            <Waves size={25} />
+          </span>
+          <span>
+            <strong>HotelReserve</strong>
+            <small>Stay Better. Travel Further.</small>
+          </span>
+        </Link>
+
+        <nav className="resorts-nav">
+          <Link href="/" >Home</Link>
+          <Link href="/pages/hotels" className="active">Hotels</Link>
+          <Link href="/pages/resorts" >
+            Resorts
+          </Link>
+          <Link href="/pages/flights">Flights</Link>
+          <Link href="/pages/destinations">Destinations</Link>
+          <Link href="/pages/about">About</Link>
+        </nav>
+
+        <div className="header-actions">
           <button
-            className="icon-button"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Open menu"
+            type="button"
+            className="header-icon"
+            aria-label="Open search"
+            onClick={() =>
+              document
+                .getElementById("resort-search")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
           >
-            <span className="material-symbols-outlined">
-              {menuOpen ? "close" : "menu"}
-            </span>
+            <Search size={20} />
           </button>
 
-          <span className="mobile-logo">LuxeStay</span>
-        </div>
-
-        <div className="mobile-actions">
-          <button
-            className="icon-button"
-            aria-label="Language"
-            onClick={() => alert("Language selector")}
+          <Link
+            href="/favorites"
+            className="header-icon"
+            aria-label="Favorites"
           >
-            <span className="material-symbols-outlined">language</span>
-          </button>
+            <Heart size={20} />
+            {favorites.length > 0 && (
+              <span className="favorite-count">
+                {favorites.length}
+              </span>
+            )}
+          </Link>
 
-          <button
-            className="icon-button"
-            aria-label="Toggle dark mode"
-            onClick={() => setDarkMode(!darkMode)}
-          >
-            <span className="material-symbols-outlined">
-              {darkMode ? "light_mode" : "dark_mode"}
-            </span>
-          </button>
+          <Link href="/login" className="signin-link">
+            <Users size={18} />
+            <span>Sign In / Register</span>
+          </Link>
 
-          <div className="avatar">
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyzuON5F66Ewyb2s8Xn6HPPBZhv4F_hYdmUjdwTbj-t5lAxiEyKybCTfPfNG-NrKW-3B_K6P1B9FDE5BYyrT1rh0UsYtbfe0jpJpOM_H1LJyCdpbgQcj66m_mbvwVdirmYMrXU1JFfSbaF5G7thi17veCXqCAfYmMjytyaSiVBYjZK7jXAEmuJg_eUCBIbFeocHCP6LGTfLw1HdUp2UWEBXIYoua_9J1nvKFpk8rd-EvvDHFN5BW8o_g"
-              alt="Guest User Avatar"
-            />
-          </div>
+          <Link href="/my-bookings" className="bookings-button">
+            My Bookings
+          </Link>
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div className="mobile-menu">
-          <button>Dashboard</button>
-          <button>Bookings</button>
-          <button>Profile</button>
-          <button className="active">Account Settings</button>
-        </div>
-      )}
+      <section className="resort-hero">
+        <div className="hero-overlay" />
 
-      {/* Main Content */}
-      <div className="content-wrapper">
-        <div className="page-heading">
-          <h1>Account Settings</h1>
+        <div className="hero-content">
+          <span className="hero-label">
+            <Waves size={15} />
+            Exclusive Resorts
+          </span>
+
+          <h1>
+            Discover the World’s
+            <br />
+            Most Beautiful Resorts
+          </h1>
+
           <p>
-            Manage your preferences, security, and data privacy.
+            Luxurious stays. Breathtaking views. Unforgettable
+            experiences.
+            <br className="desktop-break" />
+            Find your perfect resort getaway with HotelReserve.
           </p>
         </div>
+      </section>
 
-        <div className="settings-grid">
-          {/* LEFT COLUMN */}
-          <div className="left-column">
-            {/* Communication Preferences */}
-            <section className="settings-card">
-              <div className="card-heading">
-                <span className="material-symbols-outlined">
-                  notifications_active
-                </span>
+      <section
+        className="resort-search-wrap"
+        id="resort-search"
+      >
+        <form className="resort-search" onSubmit={handleSearch}>
+          <label className="search-field destination-field">
+            <MapPin size={21} />
+            <span>
+              <strong>Destination</strong>
+              <input
+                type="text"
+                placeholder="Where do you want to go?"
+                value={destination}
+                onChange={(event) =>
+                  setDestination(event.target.value)
+                }
+              />
+            </span>
+          </label>
 
-                <h2>Communication Preferences</h2>
-              </div>
+          <label className="search-field">
+            <CalendarDays size={21} />
+            <span>
+              <strong>Check In</strong>
+              <input
+                type="date"
+                value={checkIn}
+                onChange={(event) =>
+                  setCheckIn(event.target.value)
+                }
+              />
+            </span>
+          </label>
 
-              <div className="settings-list">
-                <SettingToggle
-                  title="Email Notifications"
-                  description="Receive updates about your bookings and account activity via email."
-                  checked={settings.email}
-                  onChange={() => toggleSetting("email")}
-                />
+          <label className="search-field">
+            <CalendarDays size={21} />
+            <span>
+              <strong>Check Out</strong>
+              <input
+                type="date"
+                min={checkIn || undefined}
+                value={checkOut}
+                onChange={(event) =>
+                  setCheckOut(event.target.value)
+                }
+              />
+            </span>
+          </label>
 
-                <SettingToggle
-                  title="SMS Alerts"
-                  description="Get critical updates and urgent notifications sent directly to your phone."
-                  checked={settings.sms}
-                  onChange={() => toggleSetting("sms")}
-                />
+          <label className="search-field guests-field">
+            <Users size={21} />
+            <span>
+              <strong>Guests</strong>
+              <select
+                value={guests}
+                onChange={(event) =>
+                  setGuests(event.target.value)
+                }
+              >
+                <option>1 Adult, 0 Children</option>
+                <option>2 Adults, 0 Children</option>
+                <option>2 Adults, 1 Child</option>
+                <option>2 Adults, 2 Children</option>
+                <option>4 Adults, 0 Children</option>
+              </select>
+            </span>
+            <ChevronDown size={15} />
+          </label>
 
-                <SettingToggle
-                  title="Marketing & Promotions"
-                  description="Receive exclusive offers, personalized promotions, and news from LuxeStay."
-                  checked={settings.marketing}
-                  onChange={() => toggleSetting("marketing")}
-                />
-              </div>
-            </section>
+          <button className="search-resorts-button" type="submit">
+            <Search size={18} />
+            Search Resorts
+          </button>
+        </form>
+      </section>
 
-            {/* Privacy */}
-            <section className="settings-card">
-              <div className="card-heading">
-                <span className="material-symbols-outlined">
-                  visibility_off
-                </span>
+      <section className="resorts-main">
+        <button
+          className="mobile-filter-toggle"
+          type="button"
+          onClick={() =>
+            setMobileFiltersOpen((previous) => !previous)
+          }
+        >
+          {mobileFiltersOpen ? <X size={18} /> : <SlidersHorizontal size={18} />}
+          {mobileFiltersOpen ? "Close Filters" : "Filters"}
+        </button>
 
-                <h2>Privacy & Data</h2>
-              </div>
-
-              <div className="settings-list">
-                <SettingToggle
-                  title="Data Sharing with Partners"
-                  description="Allow LuxeStay to share basic usage data with trusted partners to improve services."
-                  checked={settings.dataSharing}
-                  onChange={() => toggleSetting("dataSharing")}
-                />
-              </div>
-
-              <div className="card-footer">
-                <button
-                  className="text-button"
-                  onClick={handleDownload}
-                >
-                  Download My Data
-                </button>
-              </div>
-            </section>
+        <aside
+          className={`resort-filters ${
+            mobileFiltersOpen ? "filters-open" : ""
+          }`}
+        >
+          <div className="filter-heading">
+            <h2>
+              <SlidersHorizontal size={17} />
+              Filters
+            </h2>
+            <button type="button" onClick={clearFilters}>
+              Clear all
+            </button>
           </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="right-column">
-            {/* Security */}
-            <section className="settings-card">
-              <div className="card-heading">
-                <span className="material-symbols-outlined">
-                  security
+          <div className="filter-section">
+            <h3>Price per night</h3>
+
+            <input
+              className="price-slider"
+              type="range"
+              min="50"
+              max="1000"
+              step="10"
+              value={maxPrice}
+              onChange={(event) => {
+                setMaxPrice(Number(event.target.value));
+                setPage(1);
+              }}
+              aria-label="Maximum price per night"
+            />
+
+            <div className="price-labels">
+              <span>$50</span>
+              <strong>${maxPrice.toLocaleString()} max</strong>
+            </div>
+          </div>
+
+          <div className="filter-section">
+            <h3>Star Rating</h3>
+
+            {[5, 4, 3, 2, 1].map((rating) => (
+              <label className="filter-option" key={rating}>
+                <input
+                  type="checkbox"
+                  checked={ratings.includes(rating)}
+                  onChange={() =>
+                    toggleValue(rating, ratings, setRatings)
+                  }
+                />
+                <span>{rating} Star</span>
+                <span className="rating-stars">
+                  {"★".repeat(rating)}
+                  <span className="empty-stars">
+                    {"★".repeat(5 - rating)}
+                  </span>
                 </span>
+              </label>
+            ))}
+          </div>
 
-                <h2>Security</h2>
-              </div>
+          <div className="filter-section">
+            <h3>Resort Type</h3>
 
-              <div className="security-content">
-                <div className="security-section">
-                  <div className="setting-title">
-                    Password
-                  </div>
+            {resortTypes.map((type) => (
+              <label className="filter-option" key={type}>
+                <input
+                  type="checkbox"
+                  checked={types.includes(type)}
+                  onChange={() =>
+                    toggleValue(type, types, setTypes)
+                  }
+                />
+                <span>{type}</span>
+              </label>
+            ))}
+          </div>
 
-                  <p className="setting-description">
-                    Last changed 45 days ago.
-                  </p>
+          <div className="filter-section">
+            <h3>Amenities</h3>
 
-                  <button
-                    className="outline-button"
-                    onClick={handlePassword}
-                  >
-                    Change Password
-                  </button>
-                </div>
+            {amenityOptions.map((amenity) => (
+              <label
+                className="filter-option"
+                key={amenity.value}
+              >
+                <input
+                  type="checkbox"
+                  checked={amenities.includes(amenity.value)}
+                  onChange={() =>
+                    toggleValue(
+                      amenity.value,
+                      amenities,
+                      setAmenities
+                    )
+                  }
+                />
+                <span>{amenity.label}</span>
+              </label>
+            ))}
+          </div>
 
-                <div className="security-section bordered">
-                  <div className="security-title-row">
-                    <div className="setting-title">
-                      Two-Factor Auth (2FA)
-                    </div>
+          <button
+            className="apply-filters-button"
+            type="button"
+            onClick={() => setMobileFiltersOpen(false)}
+          >
+            Apply Filters
+          </button>
+        </aside>
 
-                    <span className="status-badge">
-                      Disabled
+        <div className="resorts-results">
+          <div className="results-heading">
+            <div>
+              <h2>Best Resorts</h2>
+              <p>
+                Showing {visibleResorts.length} of{" "}
+                {filteredResorts.length} resorts
+              </p>
+            </div>
+
+            <label className="sort-control">
+              <span>Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(event) => {
+                  setSortBy(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="popular">Popularity</option>
+                <option value="rating">Highest Rated</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+              <ChevronDown size={15} />
+            </label>
+          </div>
+
+          {visibleResorts.length > 0 ? (
+            <div className="resorts-grid">
+              {visibleResorts.map((resort) => (
+                <article className="resort-card" key={resort.id}>
+                  <div className="resort-image-wrap">
+                    <img
+                      src={resort.image}
+                      alt={resort.name}
+                      className="resort-image"
+                      loading="lazy"
+                    />
+
+                    <span
+                      className={`resort-badge ${resort.badgeType}`}
+                    >
+                      {resort.badge}
+                    </span>
+
+                    <button
+                      type="button"
+                      className={`favorite-button ${
+                        favorites.includes(resort.id)
+                          ? "is-favorite"
+                          : ""
+                      }`}
+                      aria-label={
+                        favorites.includes(resort.id)
+                          ? "Remove from favorites"
+                          : "Add to favorites"
+                      }
+                      onClick={() => toggleFavorite(resort.id)}
+                    >
+                      <Heart
+                        size={19}
+                        fill={
+                          favorites.includes(resort.id)
+                            ? "currentColor"
+                            : "none"
+                        }
+                      />
+                    </button>
+
+                    <span className="image-rating">
+                      <Star size={13} fill="currentColor" />
+                      {resort.rating}
+                      <span>({resort.reviews})</span>
                     </span>
                   </div>
 
-                  <p className="setting-description">
-                    Add an extra layer of security to your account.
-                  </p>
+                  <div className="resort-card-body">
+                    <h3>{resort.name}</h3>
 
-                  <button
-                    className="primary-button full"
-                    onClick={handle2FA}
-                  >
-                    Enable 2FA
-                  </button>
-                </div>
-              </div>
-            </section>
+                    <p className="resort-location">
+                      <MapPin size={14} />
+                      {resort.location}
+                      <span>·</span>
+                      {resort.type}
+                    </p>
 
-            {/* Danger Zone */}
-            <section className="danger-card">
-              <div className="danger-heading">
-                <span className="material-symbols-outlined">
-                  warning
-                </span>
+                    <div className="resort-amenities">
+                      {resort.amenities.slice(0, 4).map((amenity) => {
+                        const Icon = amenityIcons[amenity] || Waves;
 
-                <h2>Danger Zone</h2>
-              </div>
+                        return (
+                          <span key={amenity} title={amenity}>
+                            <Icon size={14} />
+                            {amenity === "Fitness Center"
+                              ? "Fitness"
+                              : amenity}
+                          </span>
+                        );
+                      })}
+                    </div>
 
+                    <div className="resort-card-bottom">
+                      <div className="resort-price">
+                        <strong>
+                          ${resort.price.toLocaleString()}
+                        </strong>
+                        <span>/ night</span>
+                      </div>
+
+                      <Link
+                        href={`/pages/resorts/${resort.id}`}
+                        className="view-details-button"
+                      >
+                        View Details
+                        <ArrowRight size={15} />
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="no-resorts">
+              <Search size={34} />
+              <h3>No resorts found</h3>
               <p>
-                Permanently delete your account and all associated
-                data. This action cannot be undone.
+                Try another destination or remove some filters.
               </p>
-
               <button
-                className="danger-button"
-                onClick={handleDelete}
+                type="button"
+                className="view-details-button"
+                onClick={clearFilters}
               >
-                Delete Account
+                Clear Filters
               </button>
-            </section>
-          </div>
-        </div>
-
-        {/* Save */}
-        <div className="save-container">
-          {saved && (
-            <span className="saved-message">
-              Changes saved successfully
-            </span>
+            </div>
           )}
 
-          <button
-            className="primary-button save-button"
-            onClick={handleSave}
-          >
-            Save Changes
-          </button>
+          {filteredResorts.length > pageSize && (
+            <nav className="resort-pagination" aria-label="Pagination">
+              <button
+                type="button"
+                disabled={page === 1}
+                onClick={() => setPage((previous) => previous - 1)}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              {Array.from(
+                { length: totalPages },
+                (_, index) => index + 1
+              ).map((pageNumber) => (
+                <button
+                  type="button"
+                  key={pageNumber}
+                  className={page === pageNumber ? "current-page" : ""}
+                  onClick={() => setPage(pageNumber)}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                disabled={page === totalPages}
+                onClick={() => setPage((previous) => previous + 1)}
+                aria-label="Next page"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </nav>
+          )}
         </div>
-      </div>
+      </section>
+
+      <section className="resort-promises">
+        <div>
+          <ShieldCheck size={29} />
+          <span>
+            <strong>Secure Booking</strong>
+            <small>Your data is always protected</small>
+          </span>
+        </div>
+
+        <div>
+          <Headset size={29} />
+          <span>
+            <strong>24/7 Customer Support</strong>
+            <small>We're here to help anytime</small>
+          </span>
+        </div>
+
+        <div>
+          <Star size={29} />
+          <span>
+            <strong>Best Price Guarantee</strong>
+            <small>Find a lower price? Let us know</small>
+          </span>
+        </div>
+      </section>
+
+      <footer className="resorts-footer">
+        <p>
+          © {new Date().getFullYear()} HotelReserve. All rights reserved.
+        </p>
+        <div>
+          <Link href="/pages/about">About</Link>
+          <Link href="/pages/contact">Contact</Link>
+          <Link href="/pages/privacy">Privacy Policy</Link>
+        </div>
+      </footer>
     </main>
   );
 }
 
-/* Toggle Component */
-function SettingToggle({
-  title,
-  description,
-  checked,
-  onChange,
-}) {
-  return (
-    <div className="toggle-row">
-      <div className="toggle-info">
-        <div className="setting-title">{title}</div>
-
-        <p className="setting-description">
-          {description}
-        </p>
-      </div>
-
-      <button
-        type="button"
-        className={`switch ${checked ? "active" : ""}`}
-        onClick={onChange}
-        aria-pressed={checked}
-        aria-label={`Toggle ${title}`}
-      >
-        <span className="switch-knob" />
-      </button>
-    </div>
-  );
-}
