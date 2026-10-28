@@ -40,53 +40,8 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/firebase/firebase";
 const PAGE_SIZE = 9;
 
-const FILTERS = [
-  "All Hotels",
-  "Lagos",
-  "Abuja",
-  "Featured",
-  "Verified",
-];
 
-const NIGERIAN_STATES = [
-  "Abia",
-  "Adamawa",
-  "Akwa Ibom",
-  "Anambra",
-  "Bauchi",
-  "Bayelsa",
-  "Benue",
-  "Borno",
-  "Cross River",
-  "Delta",
-  "Ebonyi",
-  "Edo",
-  "Ekiti",
-  "Enugu",
-  "Gombe",
-  "Imo",
-  "Jigawa",
-  "Kaduna",
-  "Kano",
-  "Katsina",
-  "Kebbi",
-  "Kogi",
-  "Kwara",
-  "Lagos",
-  "Nasarawa",
-  "Niger",
-  "Ogun",
-  "Ondo",
-  "Osun",
-  "Oyo",
-  "Plateau",
-  "Rivers",
-  "Sokoto",
-  "Taraba",
-  "Yobe",
-  "Zamfara",
-  "FCT",
-];
+
 
 const FCT_NAMES = [
   "fct",
@@ -267,122 +222,22 @@ export default function favoritePage() {
   // INFINITE SCROLL
   // =========================================================
 
-  useEffect(() => {
-    const target = loadMoreRef.current;
-
-    if (
-      !target ||
-      !hasMore ||
-      loading ||
-      loadingMore ||
-      error
-    ) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          fetchHotels(true);
-        }
-      },
-      {
-        root: null,
-        rootMargin: "300px",
-        threshold: 0,
-      }
-    );
-
-    observer.observe(target);
-
-    return () => observer.disconnect();
-  }, [
-    fetchHotels,
-    hasMore,
-    loading,
-    loadingMore,
-    error,
-  ]);
 
   // =========================================================
   // FILTER HOTELS
   // =========================================================
 
-  const filteredHotels = useMemo(() => {
-    let result = hotels;
-
-    switch (activeFilter) {
-      case "Lagos":
-        result = result.filter((hotel) => {
-          const city = normalizeLocation(hotel.city);
-          const state = normalizeLocation(hotel.state);
-
-          return city === "lagos" || state === "lagos";
-        });
-        break;
-
-      case "Abuja":
-        result = result.filter((hotel) => {
-          const city = normalizeLocation(hotel.city);
-          const state = normalizeLocation(hotel.state);
-
-          return (
-            FCT_NAMES.includes(city) ||
-            FCT_NAMES.includes(state)
-          );
-        });
-        break;
-
-      case "Featured":
-        result = result.filter(
-          (hotel) => hotel.featured === true
-        );
-        break;
-
-      case "Verified":
-        result = result.filter(
-          (hotel) => hotel.verified === true
-        );
-        break;
-
-      default:
-        break;
-    }
-
-    // Apply the selected Nigerian state.
-    if (selectedState) {
-      result = result.filter((hotel) =>
-        matchesState(hotel, selectedState)
-      );
-    }
-
-    return result;
-  }, [hotels, activeFilter, selectedState]);
 
   // =========================================================
   // HANDLE BUTTON FILTER
   // =========================================================
 
-  const handleFilterChange = (filter) => {
-    setActiveFilter(filter);
 
-    // Clear the state selection when a category button
-    // is selected, so the filters do not conflict.
-    setSelectedState("");
-  };
 
   // =========================================================
   // HANDLE STATE DROPDOWN
   // =========================================================
 
-  const handleStateChange = (event) => {
-    const state = event.target.value;
-
-    setSelectedState(state);
-
-    // State selection takes priority over category filters.
-    setActiveFilter("All Hotels");
-  };
 
   // =========================================================
   // ADD HOTEL TO FAVORITES
@@ -436,11 +291,7 @@ export default function favoritePage() {
         {/* HEADER */}
         <div className="nearby-hotels__header">
           <div className="nearby-hotels__intro">
-            <div className="nearby-hotels__eyebrow">
-              <Star size={18} />
-              <span>DISCOVER YOUR NEXT STAY</span>
-            </div>
-
+            
             <h2 className="nearby-hotels__title">
               Favorites Hotels
             </h2>
@@ -450,37 +301,7 @@ export default function favoritePage() {
             </p>
           </div>
 
-          {/* FILTERS */}
-          <div className="nearby-hotels__filters">
-            {FILTERS.map((filter) => (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => handleFilterChange(filter)}
-                className={`nearby-hotels__filter ${
-                  activeFilter === filter ? "is-active" : ""
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-
-            {/* NIGERIAN STATE DROPDOWN */}
-            <select
-              value={selectedState}
-              onChange={handleStateChange}
-              className="nearby-hotels__state-select"
-              aria-label="Filter hotels by Nigerian state"
-            >
-              <option value="">All States</option>
-
-              {NIGERIAN_STATES.map((state) => (
-                <option key={state} value={state}>
-                  {state === "FCT" ? "Abuja (FCT)" : state}
-                </option>
-              ))}
-            </select>
-          </div>
+          
         </div>
 
         {/* INITIAL LOADING */}
@@ -509,25 +330,10 @@ export default function favoritePage() {
           </div>
         )}
 
-        {/* EMPTY FILTER RESULTS */}
-        {!loading &&
-          !error &&
-          filteredHotels.length === 0 && (
-            <div className="nearby-hotels__empty">
-              <Hotel size={36} />
-
-              <h3>No hotels found</h3>
-
-              <p>
-                No hotels match this filter in the hotels
-                currently loaded. Try another state or filter.
-              </p>
-            </div>
-          )}
 
         {/* HOTEL CARDS */}
         <div className="nearby-hotels__grid">
-          {filteredHotels.map((hotel) => {
+          {hotels.map((hotel) => {
             const hotelId = hotel.documentId;
 
             const amenities = Array.isArray(hotel.amenities)

@@ -1,69 +1,375 @@
+
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+
+import {
+  onAuthStateChanged,
+  updateProfile,
+} from "firebase/auth";
+
+import { auth, db } from "@/firebase/firebase";
+
+import  {uploadImage}  from "@/lib/cloudinary";
 import "./profile.css";
+
+const initialFormData = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  dob: "",
+  street: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "",
+  language: "English (US)",
+  currency: "NGN (₦)",
+};
+
+function formatMemberSince(value) {
+  if (!value) return "N/A";
+
+  const date =
+    typeof value.toDate === "function"
+      ? value.toDate()
+      : new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "N/A";
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function getDateInputValue(value) {
+  if (!value) return "";
+
+  if (typeof value.toDate === "function") {
+    value = value.toDate();
+  }
+
+  if (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value)
+  ) {
+    return value;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 export default function ProfilePage() {
   const fileInputRef = useRef(null);
+  const previewUrlRef = useRef("");
 
-  const [profileImage, setProfileImage] = useState(
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAcCJmnfx7-J6C-fZeaHSsLWNM3ayigyWFXSaOTz6jMDN-TQehwwbEp8n_IUKZHTEbdUyORVThavjcFldzX1e7HvzWYlCcjjVtCMPNF9CDjVMQxjlNLXDybWV7p89g4UjjBYuTEyZFdUyORVThavjcFldzX1e7HvzWYlCcjjVtCMPNF9CDjVMQxjlNLXDybWV7p89g4UjjBYuTEyZFdUyO73rWeODY9-0A6-fbdbm6Ws4svzafglhnAT6smUUgYbqxRU5HmnLDo9xiceRyD3dLaorZ0TJaLI2w3XEqB4K32V-B5DIewqxccWbVxly8mFQ"
-  );
+  const [user, setUser] = useState(null);
+  const [profileImage, setProfileImage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [formData, setFormData] = useState({
-    firstName: "Alex",
-    lastName: "Mercer",
-    email: "alex.mercer@example.com",
-    phone: "+1 (555) 123-4567",
-    dob: "15 Mar 1988",
-    street: "123 Luxury Avenue, Suite 400",
-    city: "Metropolis",
-    state: "NY",
-    postalCode: "10001",
-    country: "United States",
-    language: "English (US)",
-    currency: "USD ($)",
-  });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [memberSince, setMemberSince] = useState("N/A");
+
+  const [formData, setFormData] = useState(initialFormData);
+
+  // Load the signed-in user's profile from Firestore.
+  useEffect(() => {
+    let cancelled = false;
+
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (cancelled) return;
+
+      setUser(currentUser);
+      setError("");
+      setSuccess("");
+
+      if (!currentUser) {
+        setFormData(initialFormData);
+        setProfileImage("");
+        setMemberSince("N/A");
+        setLoading(false);
+        setError("Please sign in to view your profile.");
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const profileRef = doc(db, "users", currentUser.uid);
+        const snapshot = await getDoc(profileRef);
+        const profile = snapshot.exists() ? snapshot.data() : {};
+
+        const nameParts = (currentUser.displayName || "")
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean);
+
+        const firstName =
+          profile.firstName ?? nameParts[0] ?? "";
+
+        const lastName =
+          profile.lastName ?? nameParts.slice(1).join(" ");
+
+        if (cancelled) return;
+
+        setFormData({
+          ...initialFormData,
+          ...profile,
+          firstName,
+          lastName,
+          email: currentUser.email ?? profile.email ?? "",
+          dob: getDateInputValue(profile.dob),
+        });
+
+        setProfileImage(
+          profile.profileImage || currentUser.photoURL || ""
+        );
+
+        setMemberSince(
+          formatMemberSince(
+            profile.createdAt ||
+              (currentUser.metadata.creationTime
+                ? new Date(currentUser.metadata.creationTime)
+                : null)
+          )
+        );
+      } catch (err) {
+        console.error("Failed to load profile:", err);
+
+        if (!cancelled) {
+          setError("Unable to load your profile. Please try again.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
 
-    setFormData((previousData) => ({
-      ...previousData,
+    setFormData((previous) => ({
+      ...previous,
       [name]: value,
     }));
+
+    setError("");
+    setSuccess("");
   };
 
+  // Preview the selected image before uploading it.
   const handleImageUpload = (event) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
 
-    const imageUrl = URL.createObjectURL(file);
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image file.");
+      event.target.value = "";
+      return;
+    }
 
-    setProfileImage(imageUrl);
+    if (file.size > 5 * 1024 * 1024) {
+      setError("The profile image must be 5 MB or smaller.");
+      event.target.value = "";
+      return;
+    }
+
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    previewUrlRef.current = previewUrl;
+
+    setSelectedImage(file);
+    setProfileImage(previewUrl);
+    setError("");
+    setSuccess("");
   };
 
   const toggleEdit = () => {
-    setIsEditing((previous) => !previous);
+    setError("");
+    setSuccess("");
+
+    if (isEditing) {
+      // Cancel editing and restore the saved profile.
+      setIsEditing(false);
+      setSelectedImage(null);
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = "";
+      }
+
+      if (user) {
+        getDoc(doc(db, "users", user.uid))
+          .then((snapshot) => {
+            const profile = snapshot.exists()
+              ? snapshot.data()
+              : {};
+
+            setProfileImage(
+              profile.profileImage || user.photoURL || ""
+            );
+
+            setFormData((previous) => ({
+              ...previous,
+              ...profile,
+              email: user.email ?? "",
+              dob: getDateInputValue(profile.dob),
+            }));
+          })
+          .catch((err) => {
+            console.error("Failed to restore profile:", err);
+            setError("Unable to restore your saved profile.");
+          });
+      }
+
+      return;
+    }
+
+    setIsEditing(true);
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
+  const handleSave = async () => {
+    if (!user) {
+      setError("Please sign in before saving your profile.");
+      return;
+    }
 
-    // Replace this with your API request when connecting a backend.
-    console.log("Profile data:", formData);
+    if (!formData.firstName.trim()) {
+      setError("First name is required.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      let imageURL = profileImage;
+
+      // Upload the selected image to Cloudinary.
+      if (selectedImage) {
+        imageURL = await uploadImage(selectedImage);
+      }
+
+      const profileData = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        phone: formData.phone.trim(),
+        dob: formData.dob,
+        street: formData.street.trim(),
+        city: formData.city.trim(),
+        state: formData.state.trim(),
+        postalCode: formData.postalCode.trim(),
+        country: formData.country.trim(),
+        language: formData.language,
+        currency: formData.currency,
+        profileImage: imageURL || "",
+        updatedAt: serverTimestamp(),
+      };
+
+      const displayName = [
+        profileData.firstName,
+        profileData.lastName,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      // Save profile information in Firestore.
+      await setDoc(
+        doc(db, "users", user.uid),
+        profileData,
+        { merge: true }
+      );
+
+      // Update the Firebase Auth display name and photo.
+      await updateProfile(user, {
+        displayName,
+        ...(imageURL ? { photoURL: imageURL } : {}),
+      });
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = "";
+      }
+
+      setSelectedImage(null);
+      setProfileImage(imageURL || "");
+      setFormData((previous) => ({
+        ...previous,
+        ...profileData,
+        email: user.email ?? "",
+      }));
+
+      setIsEditing(false);
+      setSuccess("Your profile has been saved successfully.");
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+      setError(
+        err?.message ||
+          "Unable to save your profile. Please try again."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <main className="profile-page">
+        <p>Loading your profile...</p>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="profile-page">
+        <p role="alert">
+          {error || "Please sign in to continue."}
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="profile-page">
-      {/* Header */}
       <header className="page-header">
         <div>
           <h1>Profile Settings</h1>
-
           <p>
             Manage your personal information and preferences.
           </p>
@@ -73,29 +379,44 @@ export default function ProfilePage() {
           type="button"
           className="edit-button desktop-edit"
           onClick={isEditing ? handleSave : toggleEdit}
+          disabled={saving}
         >
           <span className="material-symbols-outlined">
-            {isEditing ? "save" : "edit"}
+            {saving
+              ? "hourglass_top"
+              : isEditing
+                ? "save"
+                : "edit"}
           </span>
 
-          {isEditing ? "Save Profile" : "Edit Profile"}
+          {saving
+            ? "Saving..."
+            : isEditing
+              ? "Save Profile"
+              : "Edit Profile"}
         </button>
       </header>
 
+      {error && <p role="alert">{error}</p>}
+      {success && <p role="status">{success}</p>}
+
       <div className="profile-layout">
-
-        {/* LEFT COLUMN */}
         <aside className="sidebar">
-
-          {/* Profile Card */}
           <section className="card profile-card">
-
             <div className="profile-image-wrapper">
-              <img
-                src={profileImage}
-                alt="Profile"
-                className="profile-image"
-              />
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Profile"
+                  className="profile-image"
+                />
+              ) : (
+                <div className="profile-image profile-image-placeholder">
+                  <span className="material-symbols-outlined">
+                    person
+                  </span>
+                </div>
+              )}
 
               {isEditing && (
                 <>
@@ -104,6 +425,7 @@ export default function ProfilePage() {
                     className="upload-button"
                     aria-label="Upload new picture"
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={saving}
                   >
                     <span className="material-symbols-outlined">
                       photo_camera
@@ -116,6 +438,7 @@ export default function ProfilePage() {
                     accept="image/*"
                     hidden
                     onChange={handleImageUpload}
+                    disabled={saving}
                   />
                 </>
               )}
@@ -125,47 +448,73 @@ export default function ProfilePage() {
               {formData.firstName} {formData.lastName}
             </h2>
 
-            <p className="profile-email">
-              {formData.email}
-            </p>
+            <p className="profile-email">{formData.email}</p>
 
             <div className="member-box">
               <span>Member Since</span>
-              <strong>Oct 2021</strong>
+              <strong>{memberSince}</strong>
             </div>
           </section>
 
-          {/* Verification Card */}
           <section className="card verification-card">
             <h3>Verification Status</h3>
 
             <ul className="verification-list">
-
               <li>
                 <span className="verification-info">
-                  <span className="material-symbols-outlined success-icon">
-                    check_circle
+                  <span
+                    className={`material-symbols-outlined ${
+                      user.emailVerified
+                        ? "success-icon"
+                        : "pending-icon"
+                    }`}
+                  >
+                    {user.emailVerified
+                      ? "check_circle"
+                      : "pending"}
                   </span>
-
                   Email Address
                 </span>
 
-                <span className="verified-status">
-                  VERIFIED
+                <span
+                  className={
+                    user.emailVerified
+                      ? "verified-status"
+                      : "pending-status"
+                  }
+                >
+                  {user.emailVerified
+                    ? "VERIFIED"
+                    : "NOT VERIFIED"}
                 </span>
               </li>
 
               <li>
                 <span className="verification-info">
-                  <span className="material-symbols-outlined success-icon">
-                    check_circle
+                  <span
+                    className={`material-symbols-outlined ${
+                      user.phoneNumber
+                        ? "success-icon"
+                        : "pending-icon"
+                    }`}
+                  >
+                    {user.phoneNumber
+                      ? "check_circle"
+                      : "pending"}
                   </span>
-
                   Phone Number
                 </span>
 
-                <span className="verified-status">
-                  VERIFIED
+                <span
+                  className={
+                    user.phoneNumber
+                      ? "verified-status"
+                      : "pending-status"
+                  }
+                >
+                  {user.phoneNumber
+                    ? "HAS PHONE"
+                    : "NOT VERIFIED"}
                 </span>
               </li>
 
@@ -174,40 +523,27 @@ export default function ProfilePage() {
                   <span className="material-symbols-outlined pending-icon">
                     pending
                   </span>
-
                   Identity Document
                 </span>
 
-                <button
-                  type="button"
-                  className="verify-button"
-                  onClick={() => alert("Verification process started")}
-                >
-                  VERIFY NOW
-                </button>
+                <span className="pending-status">
+                  NOT VERIFIED
+                </span>
               </li>
-
             </ul>
           </section>
-
         </aside>
 
-        {/* RIGHT COLUMN */}
         <section className="content">
-
-          {/* Personal Details */}
           <section className="card form-card">
-            <h2 className="section-title">
-              Personal Details
-            </h2>
+            <h2 className="section-title">Personal Details</h2>
 
             <div className="form-grid">
-
               <FormField
                 label="First Name"
                 name="firstName"
                 value={formData.firstName}
-                disabled={!isEditing}
+                disabled={!isEditing || saving}
                 onChange={handleChange}
               />
 
@@ -215,7 +551,7 @@ export default function ProfilePage() {
                 label="Last Name"
                 name="lastName"
                 value={formData.lastName}
-                disabled={!isEditing}
+                disabled={!isEditing || saving}
                 onChange={handleChange}
               />
 
@@ -224,7 +560,7 @@ export default function ProfilePage() {
                 name="email"
                 type="email"
                 value={formData.email}
-                disabled={!isEditing}
+                disabled
                 onChange={handleChange}
                 fullWidth
               />
@@ -234,34 +570,30 @@ export default function ProfilePage() {
                 name="phone"
                 type="tel"
                 value={formData.phone}
-                disabled={!isEditing}
+                disabled={!isEditing || saving}
                 onChange={handleChange}
               />
 
               <FormField
                 label="Date of Birth"
                 name="dob"
+                type="date"
                 value={formData.dob}
-                disabled={!isEditing}
+                disabled={!isEditing || saving}
                 onChange={handleChange}
               />
-
             </div>
           </section>
 
-          {/* Residential Address */}
           <section className="card form-card">
-            <h2 className="section-title">
-              Residential Address
-            </h2>
+            <h2 className="section-title">Residential Address</h2>
 
             <div className="form-grid">
-
               <FormField
                 label="Street Address"
                 name="street"
                 value={formData.street}
-                disabled={!isEditing}
+                disabled={!isEditing || saving}
                 onChange={handleChange}
                 fullWidth
               />
@@ -270,7 +602,7 @@ export default function ProfilePage() {
                 label="City"
                 name="city"
                 value={formData.city}
-                disabled={!isEditing}
+                disabled={!isEditing || saving}
                 onChange={handleChange}
               />
 
@@ -278,7 +610,7 @@ export default function ProfilePage() {
                 label="State / Province"
                 name="state"
                 value={formData.state}
-                disabled={!isEditing}
+                disabled={!isEditing || saving}
                 onChange={handleChange}
               />
 
@@ -286,7 +618,7 @@ export default function ProfilePage() {
                 label="Postal Code"
                 name="postalCode"
                 value={formData.postalCode}
-                disabled={!isEditing}
+                disabled={!isEditing || saving}
                 onChange={handleChange}
               />
 
@@ -294,37 +626,30 @@ export default function ProfilePage() {
                 label="Country"
                 name="country"
                 value={formData.country}
-                disabled={!isEditing}
+                disabled={!isEditing || saving}
                 onChange={handleChange}
               />
-
             </div>
           </section>
 
-          {/* Regional Preferences */}
           <section className="card form-card">
-            <h2 className="section-title">
-              Regional Preferences
-            </h2>
+            <h2 className="section-title">Regional Preferences</h2>
 
             <div className="form-grid">
-
               <div className="form-group">
-                <label htmlFor="language">
-                  Language
-                </label>
+                <label htmlFor="language">Language</label>
 
                 <div className="select-wrapper">
                   <select
                     id="language"
                     name="language"
                     value={formData.language}
-                    disabled={!isEditing}
+                    disabled={!isEditing || saving}
                     onChange={handleChange}
                   >
-                    <option>English (US)</option>
-                    <option>French (FR)</option>
-                    <option>Spanish (ES)</option>
+                    <option value="English (US)">English (US)</option>
+                    <option value="French (FR)">French (FR)</option>
+                    <option value="Spanish (ES)">Spanish (ES)</option>
                   </select>
 
                   <span className="material-symbols-outlined select-icon">
@@ -334,21 +659,20 @@ export default function ProfilePage() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="currency">
-                  Currency
-                </label>
+                <label htmlFor="currency">Currency</label>
 
                 <div className="select-wrapper">
                   <select
                     id="currency"
                     name="currency"
                     value={formData.currency}
-                    disabled={!isEditing}
+                    disabled={!isEditing || saving}
                     onChange={handleChange}
                   >
-                    <option>USD ($)</option>
-                    <option>EUR (€)</option>
-                    <option>GBP (£)</option>
+                    <option value="NGN (₦)">NGN (₦)</option>
+                    <option value="USD ($)">USD ($)</option>
+                    <option value="EUR (€)">EUR (€)</option>
+                    <option value="GBP (£)">GBP (£)</option>
                   </select>
 
                   <span className="material-symbols-outlined select-icon">
@@ -356,33 +680,36 @@ export default function ProfilePage() {
                   </span>
                 </div>
               </div>
-
             </div>
           </section>
 
-          {/* Mobile Button */}
           <div className="mobile-edit">
             <button
               type="button"
               className="edit-button"
               onClick={isEditing ? handleSave : toggleEdit}
+              disabled={saving}
             >
               <span className="material-symbols-outlined">
-                {isEditing ? "save" : "edit"}
+                {saving
+                  ? "hourglass_top"
+                  : isEditing
+                    ? "save"
+                    : "edit"}
               </span>
 
-              {isEditing ? "Save Profile" : "Edit Profile"}
+              {saving
+                ? "Saving..."
+                : isEditing
+                  ? "Save Profile"
+                  : "Edit Profile"}
             </button>
           </div>
-
         </section>
       </div>
     </main>
   );
 }
-
-
-/* Reusable Input Component */
 
 function FormField({
   label,
@@ -394,20 +721,14 @@ function FormField({
   fullWidth = false,
 }) {
   return (
-    <div
-      className={`form-group ${
-        fullWidth ? "full-width" : ""
-      }`}
-    >
-      <label htmlFor={name}>
-        {label}
-      </label>
+    <div className={`form-group ${fullWidth ? "full-width" : ""}`}>
+      <label htmlFor={name}>{label}</label>
 
       <input
         id={name}
         name={name}
         type={type}
-        value={value}
+        value={value ?? ""}
         disabled={disabled}
         onChange={onChange}
       />
