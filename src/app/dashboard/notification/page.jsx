@@ -604,107 +604,6 @@ const [activeCategory, setActiveCategory] = useState("all");
           </Link>
         </div>
       </header>
-
-      <section className="resort-hero">
-        <div className="hero-overlay" />
-
-        <div className="hero-content">
-          <span className="hero-label">
-            <Waves size={15} />
-            Exclusive Resorts
-          </span>
-
-          <h1>
-            Discover the World’s
-            <br />
-            Most Beautiful Resorts
-          </h1>
-
-          <p>
-            Luxurious stays. Breathtaking views. Unforgettable
-            experiences.
-            <br className="desktop-break" />
-            Find your perfect resort getaway with HotelReserve.
-          </p>
-        </div>
-      </section>
-
-      <section
-        className="resort-search-wrap"
-        id="resort-search"
-      >
-        <form className="resort-search" onSubmit={handleSearch}>
-          <label className="search-field destination-field">
-            <MapPin size={21} />
-            <span>
-              <strong>Destination</strong>
-              <input
-                type="text"
-                placeholder="Where do you want to go?"
-                value={destination}
-                onChange={(event) =>
-                  setDestination(event.target.value)
-                }
-              />
-            </span>
-          </label>
-
-          <label className="search-field">
-            <CalendarDays size={21} />
-            <span>
-              <strong>Check In</strong>
-              <input
-                type="date"
-                value={checkIn}
-                onChange={(event) =>
-                  setCheckIn(event.target.value)
-                }
-              />
-            </span>
-          </label>
-
-          <label className="search-field">
-            <CalendarDays size={21} />
-            <span>
-              <strong>Check Out</strong>
-              <input
-                type="date"
-                min={checkIn || undefined}
-                value={checkOut}
-                onChange={(event) =>
-                  setCheckOut(event.target.value)
-                }
-              />
-            </span>
-          </label>
-
-          <label className="search-field guests-field">
-            <Users size={21} />
-            <span>
-              <strong>Guests</strong>
-              <select
-                value={guests}
-                onChange={(event) =>
-                  setGuests(event.target.value)
-                }
-              >
-                <option>1 Adult, 0 Children</option>
-                <option>2 Adults, 0 Children</option>
-                <option>2 Adults, 1 Child</option>
-                <option>2 Adults, 2 Children</option>
-                <option>4 Adults, 0 Children</option>
-              </select>
-            </span>
-            <ChevronDown size={15} />
-          </label>
-
-          <button className="search-resorts-button" type="submit">
-            <Search size={18} />
-            Search Resorts
-          </button>
-        </form>
-      </section>
-
  <main className="notifications-page">
       <header className="mobile-notification-header">
         <span className="mobile-logo">LuxeStay</span>
@@ -875,32 +774,10 @@ const [activeCategory, setActiveCategory] = useState("all");
         </div>
       </div>
     </main>
+    
 
-      <section className="resort-promises">
-        <div>
-          <ShieldCheck size={29} />
-          <span>
-            <strong>Secure Booking</strong>
-            <small>Your data is always protected</small>
-          </span>
-        </div>
 
-        <div>
-          <Headset size={29} />
-          <span>
-            <strong>24/7 Customer Support</strong>
-            <small>We're here to help anytime</small>
-          </span>
-        </div>
 
-        <div>
-          <Star size={29} />
-          <span>
-            <strong>Best Price Guarantee</strong>
-            <small>Find a lower price? Let us know</small>
-          </span>
-        </div>
-      </section>
 
       <footer className="resorts-footer">
         <p>

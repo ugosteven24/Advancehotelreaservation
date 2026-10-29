@@ -1,34 +1,33 @@
 
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Roboto_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-
+import "./global.css"
 import { getUserId } from "@/lib/session";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-jakarta-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const robotoMono = Roboto_Mono({
+  variable: "--font-roboto-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata = {
-  title: "Hotel reservation",
-  description: "Book your perfect stay with us",
+  title: "HotelReserve | Book Your Perfect Stay",
+  description: "Discover hotels and resorts, compare stays, and book your perfect getaway.",
 };
 
-// Pages where signed-in users should be redirected to the dashboard.
 const GUEST_ONLY_PATHS = ["/", "/login", "/register"];
 
 export default async function RootLayout({ children }) {
-  // Read the pathname supplied by proxy.js.
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") ?? "";
 
-  // Redirect signed-in users away from guest-only pages.
   if (GUEST_ONLY_PATHS.includes(pathname) && (await getUserId())) {
     redirect("/dashboard");
   }
@@ -36,7 +35,7 @@ export default async function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${jakartaSans.variable} ${robotoMono.variable}`}
     >
       <head>
         <link

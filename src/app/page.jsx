@@ -1,8 +1,16 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import {
+  collection,
+  getDocs,
+  limit,
+  query,
+  startAfter,
+} from "firebase/firestore";
+import { db } from "@/firebase/firebase";
 import {
   Search,
   MapPin,
@@ -11,8 +19,6 @@ import {
   Heart,
   SlidersHorizontal,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ArrowRight,
   Waves,
   Wifi,
@@ -21,122 +27,18 @@ import {
   ShieldCheck,
   Headset,
   Star,
-  Menu,
   X,
 } from "lucide-react";
 
 import "./resorts.css";
 
-const resorts = [
-  {
-    id: 1,
-    name: "Maldives Island Resort",
-    location: "Maldives",
-    country: "Maldives",
-    type: "Beach Resort",
-    price: 450,
-    rating: 4.8,
-    reviews: 124,
-    badge: "Popular",
-    badgeType: "popular",
-    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
-    image:
-      "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: 2,
-    name: "Santorini Cliff Resort",
-    location: "Santorini, Greece",
-    country: "Greece",
-    type: "Beach Resort",
-    price: 320,
-    rating: 4.6,
-    reviews: 98,
-    badge: "Best Value",
-    badgeType: "value",
-    amenities: ["Pool", "Spa", "WiFi", "Restaurant"],
-    image:
-      "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: 3,
-    name: "Bali Beach Resort & Spa",
-    location: "Bali, Indonesia",
-    country: "Indonesia",
-    type: "Beach Resort",
-    price: 280,
-    rating: 4.9,
-    reviews: 176,
-    badge: "Luxury",
-    badgeType: "luxury",
-    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
-    image:
-      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: 4,
-    name: "Lake Como Resort",
-    location: "Lake Como, Italy",
-    country: "Italy",
-    type: "Mountain Resort",
-    price: 390,
-    rating: 4.5,
-    reviews: 87,
-    badge: "Trending",
-    badgeType: "trending",
-    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
-    image:
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: 5,
-    name: "Phuket Island Resort",
-    location: "Phuket, Thailand",
-    country: "Thailand",
-    type: "Island Resort",
-    price: 260,
-    rating: 4.7,
-    reviews: 112,
-    badge: "Family Friendly",
-    badgeType: "family",
-    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Fitness Center"],
-    image:
-      "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: 6,
-    name: "Seychelles Resort & Spa",
-    location: "Seychelles",
-    country: "Seychelles",
-    type: "Beach Resort",
-    price: 520,
-    rating: 4.8,
-    reviews: 143,
-    badge: "Romantic",
-    badgeType: "romantic",
-    amenities: ["Pool", "Spa", "WiFi", "Restaurant", "Beach Access"],
-    image:
-      "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1000&q=85",
-  },
-];
-
-const resortTypes = [
-  "Beach Resort",
-  "Mountain Resort",
-  "Island Resort",
-  "All-Inclusive",
-  "Wellness Resort",
-  "Family Resort",
-];
-
-const amenityOptions = [
-  { label: "Swimming Pool", value: "Pool" },
-  { label: "Spa & Wellness", value: "Spa" },
-  { label: "Free WiFi", value: "WiFi" },
-  { label: "Restaurant", value: "Restaurant" },
-  { label: "Fitness Center", value: "Fitness Center" },
-  { label: "Beach Access", value: "Beach Access" },
-];
+import PopularDestinations from "../components/homepage/PopularDestinations"
+import PopularHotels from "../components/homepage/PopularHotels"
+import GreatStays from "../components/homepage/GreatStays"
+import WhyTravel from "../components/homepage/WhyTravelers"
+import HowItWorks from "../components/homepage//HowItWorks"
+import Location from "./location/location"
+const PAGE_SIZE = 12;
 
 const amenityIcons = {
   Pool: Waves,
@@ -147,48 +49,222 @@ const amenityIcons = {
   "Beach Access": Waves,
 };
 
+function normalizeResort(data, id) {
+  const location = [data.city, data.state, data.country]
+    .filter(Boolean)
+    .join(", ");
+
+  const rawImages = Array.isArray(data.images) ? data.images : [];
+
+  const image =
+    rawImages
+      .map((item) => (typeof item === "string" ? item : item?.url))
+      .find(Boolean) ||
+    data.image ||
+    data.imageUrl ||
+    data.photoURL ||
+    data.coverImage
+  "";
+
+  return {
+    id,
+    name: data.name || data.title || "Unnamed resort",
+    location: location || data.address || "Location unavailable",
+    country: data.country || "",
+    type: data.type || data.resortType || "",
+    price: Number(
+      data.pricePerNight ?? data.price ?? data.nightlyPrice ?? 0
+    ),
+    rating: Number(data.rating || 0),
+    reviews: Number(data.reviews ?? data.reviewCount ?? 0),
+    badge: data.badge || "",
+    badgeType: data.badgeType || "",
+    amenities: Array.isArray(data.amenities) ? data.amenities : [],
+    image,
+    status: String(data.status || "active").toLowerCase(),
+  };
+}
+
 export default function ResortsPage() {
+  const [resorts, setResorts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState("");
+
   const [destination, setDestination] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState("2 Adults, 0 Children");
+  const [guests, setGuests] = useState("2");
 
-  const [maxPrice, setMaxPrice] = useState(1000);
-  const [ratings, setRatings] = useState([5]);
-  const [types, setTypes] = useState(["Beach Resort"]);
-  const [amenities, setAmenities] = useState([
-    "Pool",
-    "WiFi",
-  ]);
-
+  const [maxPrice, setMaxPrice] = useState(null);
+  const [ratings, setRatings] = useState([]);
+  const [types, setTypes] = useState([]);
+  const [amenities, setAmenities] = useState([]);
   const [sortBy, setSortBy] = useState("popular");
   const [favorites, setFavorites] = useState([]);
-  const [page, setPage] = useState(1);
-  const [mobileFiltersOpen, setMobileFiltersOpen] =
-    useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const pageSize = 6;
+  const observerRef = useRef(null);
+  const loadingRef = useRef(false);
+  const lastDocumentRef = useRef(null);
+  const hasMoreRef = useRef(true);
+
+  const [hasMore, setHasMore] = useState(true);
+
+  // Fetch the first batch or the next batch from Firestore.
+  const fetchResorts = useCallback(async (isInitial = false) => {
+    if (loadingRef.current) return;
+    if (!isInitial && !hasMoreRef.current) return;
+
+    loadingRef.current = true;
+    setError("");
+
+    if (isInitial) {
+      setLoading(true);
+      lastDocumentRef.current = null;
+      hasMoreRef.current = true;
+      setHasMore(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const constraints = [limit(PAGE_SIZE)];
+
+      if (!isInitial && lastDocumentRef.current) {
+        constraints.unshift(startAfter(lastDocumentRef.current));
+      }
+
+      const resortsQuery = query(
+        collection(db, "hotels"),
+        ...constraints
+      );
+
+      const snapshot = await getDocs(resortsQuery);
+
+      const results = snapshot.docs
+        .map((document) =>
+          normalizeResort(document.data(), document.id)
+        )
+        .filter((resort) => resort.status !== "inactive");
+
+      setResorts((previous) => {
+        if (isInitial) return results;
+
+        // Prevent duplicates if a document appears in two batches.
+        const existingIds = new Set(previous.map((item) => item.id));
+        return [
+          ...previous,
+          ...results.filter((item) => !existingIds.has(item.id)),
+        ];
+      });
+
+      if (snapshot.docs.length > 0) {
+        lastDocumentRef.current =
+          snapshot.docs[snapshot.docs.length - 1];
+      }
+
+      const moreAvailable = snapshot.docs.length === PAGE_SIZE;
+      hasMoreRef.current = moreAvailable;
+      setHasMore(moreAvailable);
+    } catch (err) {
+      console.error("Failed to load resorts:", err);
+      setError("Unable to load resorts. Please try again.");
+    } finally {
+      loadingRef.current = false;
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchResorts(true);
+  }, [fetchResorts]);
+
+  // Automatically fetch the next batch when the sentinel enters view.
+  useEffect(() => {
+    const sentinel = observerRef.current;
+
+    if (
+      !sentinel ||
+      loading ||
+      loadingMore ||
+      !hasMore ||
+      error
+    ) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          fetchResorts(false);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "300px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [fetchResorts, loading, loadingMore, hasMore, error]);
+
+  // Generate filter choices from records already fetched.
+  const resortTypes = useMemo(
+    () =>
+      [...new Set(resorts.map((resort) => resort.type).filter(Boolean))]
+        .sort(),
+    [resorts]
+  );
+
+  const amenityOptions = useMemo(
+    () =>
+      [...new Set(resorts.flatMap((resort) => resort.amenities))]
+        .filter(Boolean)
+        .sort()
+        .map((value) => ({
+          value,
+          label: value,
+        })),
+    [resorts]
+  );
+
+  const prices = resorts
+    .map((resort) => resort.price)
+    .filter((price) => Number.isFinite(price) && price > 0);
+
+  const minPrice = prices.length
+    ? Math.floor(Math.min(...prices))
+    : 0;
+
+  const highestPrice = prices.length
+    ? Math.ceil(Math.max(...prices))
+    : 0;
 
   const filteredResorts = useMemo(() => {
-    let result = resorts.filter((resort) => {
-      const term = searchTerm.trim().toLowerCase();
+    const term = searchTerm.trim().toLowerCase();
 
+    const result = resorts.filter((resort) => {
       const matchesDestination =
         !term ||
         resort.name.toLowerCase().includes(term) ||
         resort.location.toLowerCase().includes(term) ||
         resort.country.toLowerCase().includes(term);
 
-      const matchesPrice = resort.price <= maxPrice;
+      const matchesPrice =
+        maxPrice === null || resort.price <= maxPrice;
 
       const matchesRating =
         ratings.length === 0 ||
-        ratings.some((rating) => resort.rating >= rating - 0.9);
+        ratings.some((rating) => resort.rating >= rating);
 
       const matchesType =
-        types.length === 0 ||
-        types.includes(resort.type);
+        types.length === 0 || types.includes(resort.type);
 
       const matchesAmenities = amenities.every((amenity) =>
         resort.amenities.includes(amenity)
@@ -214,41 +290,28 @@ export default function ResortsPage() {
     }
 
     return result;
-  }, [searchTerm, maxPrice, ratings, types, amenities, sortBy]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredResorts.length / pageSize)
-  );
-
-  const visibleResorts = filteredResorts.slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
+  }, [resorts, searchTerm, maxPrice, ratings, types, amenities, sortBy]);
 
   function toggleValue(value, values, setValues) {
-    setValues(
-      values.includes(value)
-        ? values.filter((item) => item !== value)
-        : [...values, value]
+    setValues((previous) =>
+      previous.includes(value)
+        ? previous.filter((item) => item !== value)
+        : [...previous, value]
     );
-    setPage(1);
   }
 
   function handleSearch(event) {
     event.preventDefault();
     setSearchTerm(destination);
-    setPage(1);
   }
 
   function clearFilters() {
-    setMaxPrice(1000);
+    setMaxPrice(null);
     setRatings([]);
     setTypes([]);
     setAmenities([]);
     setDestination("");
     setSearchTerm("");
-    setPage(1);
   }
 
   function toggleFavorite(id) {
@@ -274,9 +337,9 @@ export default function ResortsPage() {
 
         <nav className="resorts-nav">
           <Link href="/" className="active">Home</Link>
-          <Link href="/pages/hotels">Hotels</Link>
-          <Link href="/pages/resorts" >
-            Resorts
+          <Link href="/pages/resorts" >Resorts</Link>
+          <Link href="/pages/favorites" >
+            Favorites
           </Link>
           <Link href="/pages/flights">Flights</Link>
           <Link href="/pages/destinations">Destinations</Link>
@@ -327,28 +390,23 @@ export default function ResortsPage() {
         <div className="hero-content">
           <span className="hero-label">
             <Waves size={15} />
-            Exclusive Resorts
+            Explore Resorts
           </span>
 
           <h1>
-            Discover the World’s
+            Discover Your
             <br />
-            Most Beautiful Resorts
+            Perfect Resort
           </h1>
 
           <p>
-            Luxurious stays. Breathtaking views. Unforgettable
-            experiences.
-            <br className="desktop-break" />
-            Find your perfect resort getaway with HotelReserve.
+            Explore resort stays, compare prices, and find
+            a destination that suits you.
           </p>
         </div>
       </section>
 
-      <section
-        className="resort-search-wrap"
-        id="resort-search"
-      >
+      <section className="resort-search-wrap" id="resort-search">
         <form className="resort-search" onSubmit={handleSearch}>
           <label className="search-field destination-field">
             <MapPin size={21} />
@@ -356,11 +414,9 @@ export default function ResortsPage() {
               <strong>Destination</strong>
               <input
                 type="text"
-                placeholder="Where do you want to go?"
+                placeholder="Search resort or destination"
                 value={destination}
-                onChange={(event) =>
-                  setDestination(event.target.value)
-                }
+                onChange={(event) => setDestination(event.target.value)}
               />
             </span>
           </label>
@@ -371,10 +427,15 @@ export default function ResortsPage() {
               <strong>Check In</strong>
               <input
                 type="date"
+                min={new Date().toISOString().split("T")[0]}
                 value={checkIn}
-                onChange={(event) =>
-                  setCheckIn(event.target.value)
-                }
+                onChange={(event) => {
+                  setCheckIn(event.target.value);
+
+                  if (checkOut && event.target.value > checkOut) {
+                    setCheckOut("");
+                  }
+                }}
               />
             </span>
           </label>
@@ -385,11 +446,9 @@ export default function ResortsPage() {
               <strong>Check Out</strong>
               <input
                 type="date"
-                min={checkIn || undefined}
+                min={checkIn || new Date().toISOString().split("T")[0]}
                 value={checkOut}
-                onChange={(event) =>
-                  setCheckOut(event.target.value)
-                }
+                onChange={(event) => setCheckOut(event.target.value)}
               />
             </span>
           </label>
@@ -400,15 +459,14 @@ export default function ResortsPage() {
               <strong>Guests</strong>
               <select
                 value={guests}
-                onChange={(event) =>
-                  setGuests(event.target.value)
-                }
+                onChange={(event) => setGuests(event.target.value)}
               >
-                <option>1 Adult, 0 Children</option>
-                <option>2 Adults, 0 Children</option>
-                <option>2 Adults, 1 Child</option>
-                <option>2 Adults, 2 Children</option>
-                <option>4 Adults, 0 Children</option>
+                <option value="1">1 Guest</option>
+                <option value="2">2 Guests</option>
+                <option value="3">3 Guests</option>
+                <option value="4">4 Guests</option>
+                <option value="5">5 Guests</option>
+                <option value="6">6 Guests</option>
               </select>
             </span>
             <ChevronDown size={15} />
@@ -421,331 +479,14 @@ export default function ResortsPage() {
         </form>
       </section>
 
-      <section className="resorts-main">
-        <button
-          className="mobile-filter-toggle"
-          type="button"
-          onClick={() =>
-            setMobileFiltersOpen((previous) => !previous)
-          }
-        >
-          {mobileFiltersOpen ? <X size={18} /> : <SlidersHorizontal size={18} />}
-          {mobileFiltersOpen ? "Close Filters" : "Filters"}
-        </button>
 
-        <aside
-          className={`resort-filters ${
-            mobileFiltersOpen ? "filters-open" : ""
-          }`}
-        >
-          <div className="filter-heading">
-            <h2>
-              <SlidersHorizontal size={17} />
-              Filters
-            </h2>
-            <button type="button" onClick={clearFilters}>
-              Clear all
-            </button>
-          </div>
-
-          <div className="filter-section">
-            <h3>Price per night</h3>
-
-            <input
-              className="price-slider"
-              type="range"
-              min="50"
-              max="1000"
-              step="10"
-              value={maxPrice}
-              onChange={(event) => {
-                setMaxPrice(Number(event.target.value));
-                setPage(1);
-              }}
-              aria-label="Maximum price per night"
-            />
-
-            <div className="price-labels">
-              <span>$50</span>
-              <strong>${maxPrice.toLocaleString()} max</strong>
-            </div>
-          </div>
-
-          <div className="filter-section">
-            <h3>Star Rating</h3>
-
-            {[5, 4, 3, 2, 1].map((rating) => (
-              <label className="filter-option" key={rating}>
-                <input
-                  type="checkbox"
-                  checked={ratings.includes(rating)}
-                  onChange={() =>
-                    toggleValue(rating, ratings, setRatings)
-                  }
-                />
-                <span>{rating} Star</span>
-                <span className="rating-stars">
-                  {"★".repeat(rating)}
-                  <span className="empty-stars">
-                    {"★".repeat(5 - rating)}
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-
-          <div className="filter-section">
-            <h3>Resort Type</h3>
-
-            {resortTypes.map((type) => (
-              <label className="filter-option" key={type}>
-                <input
-                  type="checkbox"
-                  checked={types.includes(type)}
-                  onChange={() =>
-                    toggleValue(type, types, setTypes)
-                  }
-                />
-                <span>{type}</span>
-              </label>
-            ))}
-          </div>
-
-          <div className="filter-section">
-            <h3>Amenities</h3>
-
-            {amenityOptions.map((amenity) => (
-              <label
-                className="filter-option"
-                key={amenity.value}
-              >
-                <input
-                  type="checkbox"
-                  checked={amenities.includes(amenity.value)}
-                  onChange={() =>
-                    toggleValue(
-                      amenity.value,
-                      amenities,
-                      setAmenities
-                    )
-                  }
-                />
-                <span>{amenity.label}</span>
-              </label>
-            ))}
-          </div>
-
-          <button
-            className="apply-filters-button"
-            type="button"
-            onClick={() => setMobileFiltersOpen(false)}
-          >
-            Apply Filters
-          </button>
-        </aside>
-
-        <div className="resorts-results">
-          <div className="results-heading">
-            <div>
-              <h2>Best Resorts</h2>
-              <p>
-                Showing {visibleResorts.length} of{" "}
-                {filteredResorts.length} resorts
-              </p>
-            </div>
-
-            <label className="sort-control">
-              <span>Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(event) => {
-                  setSortBy(event.target.value);
-                  setPage(1);
-                }}
-              >
-                <option value="popular">Popularity</option>
-                <option value="rating">Highest Rated</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-              </select>
-              <ChevronDown size={15} />
-            </label>
-          </div>
-
-          {visibleResorts.length > 0 ? (
-            <div className="resorts-grid">
-              {visibleResorts.map((resort) => (
-                <article className="resort-card" key={resort.id}>
-                  <div className="resort-image-wrap">
-                    <img
-                      src={resort.image}
-                      alt={resort.name}
-                      className="resort-image"
-                      loading="lazy"
-                    />
-
-                    <span
-                      className={`resort-badge ${resort.badgeType}`}
-                    >
-                      {resort.badge}
-                    </span>
-
-                    <button
-                      type="button"
-                      className={`favorite-button ${
-                        favorites.includes(resort.id)
-                          ? "is-favorite"
-                          : ""
-                      }`}
-                      aria-label={
-                        favorites.includes(resort.id)
-                          ? "Remove from favorites"
-                          : "Add to favorites"
-                      }
-                      onClick={() => toggleFavorite(resort.id)}
-                    >
-                      <Heart
-                        size={19}
-                        fill={
-                          favorites.includes(resort.id)
-                            ? "currentColor"
-                            : "none"
-                        }
-                      />
-                    </button>
-
-                    <span className="image-rating">
-                      <Star size={13} fill="currentColor" />
-                      {resort.rating}
-                      <span>({resort.reviews})</span>
-                    </span>
-                  </div>
-
-                  <div className="resort-card-body">
-                    <h3>{resort.name}</h3>
-
-                    <p className="resort-location">
-                      <MapPin size={14} />
-                      {resort.location}
-                      <span>·</span>
-                      {resort.type}
-                    </p>
-
-                    <div className="resort-amenities">
-                      {resort.amenities.slice(0, 4).map((amenity) => {
-                        const Icon = amenityIcons[amenity] || Waves;
-
-                        return (
-                          <span key={amenity} title={amenity}>
-                            <Icon size={14} />
-                            {amenity === "Fitness Center"
-                              ? "Fitness"
-                              : amenity}
-                          </span>
-                        );
-                      })}
-                    </div>
-
-                    <div className="resort-card-bottom">
-                      <div className="resort-price">
-                        <strong>
-                          ${resort.price.toLocaleString()}
-                        </strong>
-                        <span>/ night</span>
-                      </div>
-
-                      <Link
-                        href={`/pages/resorts/${resort.id}`}
-                        className="view-details-button"
-                      >
-                        View Details
-                        <ArrowRight size={15} />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="no-resorts">
-              <Search size={34} />
-              <h3>No resorts found</h3>
-              <p>
-                Try another destination or remove some filters.
-              </p>
-              <button
-                type="button"
-                className="view-details-button"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </button>
-            </div>
-          )}
-
-          {filteredResorts.length > pageSize && (
-            <nav className="resort-pagination" aria-label="Pagination">
-              <button
-                type="button"
-                disabled={page === 1}
-                onClick={() => setPage((previous) => previous - 1)}
-                aria-label="Previous page"
-              >
-                <ChevronLeft size={18} />
-              </button>
-
-              {Array.from(
-                { length: totalPages },
-                (_, index) => index + 1
-              ).map((pageNumber) => (
-                <button
-                  type="button"
-                  key={pageNumber}
-                  className={page === pageNumber ? "current-page" : ""}
-                  onClick={() => setPage(pageNumber)}
-                >
-                  {pageNumber}
-                </button>
-              ))}
-
-              <button
-                type="button"
-                disabled={page === totalPages}
-                onClick={() => setPage((previous) => previous + 1)}
-                aria-label="Next page"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </nav>
-          )}
-        </div>
-      </section>
-
-      <section className="resort-promises">
-        <div>
-          <ShieldCheck size={29} />
-          <span>
-            <strong>Secure Booking</strong>
-            <small>Your data is always protected</small>
-          </span>
-        </div>
-
-        <div>
-          <Headset size={29} />
-          <span>
-            <strong>24/7 Customer Support</strong>
-            <small>We're here to help anytime</small>
-          </span>
-        </div>
-
-        <div>
-          <Star size={29} />
-          <span>
-            <strong>Best Price Guarantee</strong>
-            <small>Find a lower price? Let us know</small>
-          </span>
-        </div>
-      </section>
+      <div className="px-9">
+        <PopularDestinations />
+        <PopularHotels />
+        <GreatStays />
+        <WhyTravel />
+        <HowItWorks />
+      </div>
 
       <footer className="resorts-footer">
         <p>
@@ -760,4 +501,3 @@ export default function ResortsPage() {
     </main>
   );
 }
-

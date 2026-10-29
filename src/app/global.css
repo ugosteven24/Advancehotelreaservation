@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+
+:root {
+  --font-primary: var(--font-jakarta-sans);
+  --font-monospace: var(--font-roboto-mono);
+}
+
+html,
+body {
+  font-family: var(--font-primary), sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

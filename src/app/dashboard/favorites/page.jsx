@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 import "./resorts.css";
-import ProfileImage from "../component/profileImage";
+
 const resorts = [
   {
     id: 1,
@@ -273,13 +273,14 @@ export default function ResortsPage() {
         </Link>
 
         <nav className="resorts-nav">
-          <Link href="/dashboard" >Home</Link>
-          <Link href="/dashboard/explore">Explore</Link>
-
-          <Link href="/dashboard/favorites" className="active">Favorites</Link>
-          <Link href="/dashboard/mybooking">My-booking</Link>
-          <Link href="/dashboard/notification" >Notification</Link>
-          <Link href="/dashboard/profile" >Profile</Link>
+          <Link href="/" >Home</Link>
+          <Link href="/pages/hotels">Hotels</Link>
+          <Link href="/pages/favorites" className="active">
+            Favorites
+          </Link>
+          <Link href="/pages/flights">Flights</Link>
+          <Link href="/pages/destinations">Destinations</Link>
+          <Link href="/pages/about">About</Link>
         </nav>
 
         <div className="header-actions">
@@ -310,8 +311,8 @@ export default function ResortsPage() {
           </Link>
 
           <Link href="/login" className="signin-link">
-            <ProfileImage />
-            <span>Sign Out </span>
+            <Users size={18} />
+            <span>Sign In / Register</span>
           </Link>
 
           <Link href="/my-bookings" className="bookings-button">
@@ -433,8 +434,9 @@ export default function ResortsPage() {
         </button>
 
         <aside
-          className={`resort-filters ${mobileFiltersOpen ? "filters-open" : ""
-            }`}
+          className={`resort-filters ${
+            mobileFiltersOpen ? "filters-open" : ""
+          }`}
         >
           <div className="filter-heading">
             <h2>
@@ -590,10 +592,11 @@ export default function ResortsPage() {
 
                     <button
                       type="button"
-                      className={`favorite-button ${favorites.includes(resort.id)
+                      className={`favorite-button ${
+                        favorites.includes(resort.id)
                           ? "is-favorite"
                           : ""
-                        }`}
+                      }`}
                       aria-label={
                         favorites.includes(resort.id)
                           ? "Remove from favorites"

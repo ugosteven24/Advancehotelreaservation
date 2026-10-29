@@ -274,9 +274,9 @@ export default function ResortsPage() {
 
         <nav className="resorts-nav">
           <Link href="/" >Home</Link>
-          <Link href="/pages/hotels">Hotels</Link>
-          <Link href="/pages/resorts" >
-            Resorts
+          <Link href="/pages/resorts">Resorts</Link>
+          <Link href="/pages/favorites" >
+            Favorites
           </Link>
           <Link href="/pages/flights">Flights</Link>
           <Link href="/pages/destinations">Destinations</Link>
