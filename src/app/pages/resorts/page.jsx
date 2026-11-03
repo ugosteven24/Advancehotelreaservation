@@ -14,8 +14,6 @@ import { db } from "@/firebase/firebase";
 import {
   Search,
   MapPin,
-  CalendarDays,
-  Users,
   Heart,
   SlidersHorizontal,
   ChevronDown,
@@ -29,8 +27,8 @@ import {
   Star,
   X,
 } from "lucide-react";
+import "../about/about.css";
 
-import "./resorts.css";
 
 const PAGE_SIZE = 12;
 
@@ -323,103 +321,39 @@ export default function ResortsPage() {
   }
 
   return (
-    <main className="resorts-page">
-   
+    <main className="">
 
-      <section className="resort-hero">
-        <div className="hero-overlay" />
-
-        <div className="hero-content">
-          <span className="hero-label">
-            <Waves size={15} />
-            Explore Resorts
+   <section className="about-hero">
+        <div className="about-hero-content">
+          <span className="about-eyebrow">
+            ABOUT HOTELRESERVE
           </span>
 
           <h1>
-            Discover Your
-            <br />
-            Perfect Resort
+            Making every stay
+            <span> worth remembering.</span>
           </h1>
 
           <p>
-            Explore resort stays, compare prices, and find
-            a destination that suits you.
+            We believe finding the right place to stay should be
+            simple, convenient, and enjoyable. HotelReserve helps
+            travellers discover accommodation and plan their next
+            getaway with confidence.
           </p>
+
+          <div className="about-hero-actions">
+            <Link href="/pages/resorts" className="about-primary-btn">
+              Explore Resorts <ArrowRight size={18} />
+            </Link>
+
+            <Link href="/pages/contact" className="about-outline-btn">
+              Contact Us
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="resort-search-wrap" id="resort-search">
-        <form className="resort-search" onSubmit={handleSearch}>
-          <label className="search-field destination-field">
-            <MapPin size={21} />
-            <span>
-              <strong>Destination</strong>
-              <input
-                type="text"
-                placeholder="Search resort or destination"
-                value={destination}
-                onChange={(event) => setDestination(event.target.value)}
-              />
-            </span>
-          </label>
 
-          <label className="search-field">
-            <CalendarDays size={21} />
-            <span>
-              <strong>Check In</strong>
-              <input
-                type="date"
-                min={new Date().toISOString().split("T")[0]}
-                value={checkIn}
-                onChange={(event) => {
-                  setCheckIn(event.target.value);
-
-                  if (checkOut && event.target.value > checkOut) {
-                    setCheckOut("");
-                  }
-                }}
-              />
-            </span>
-          </label>
-
-          <label className="search-field">
-            <CalendarDays size={21} />
-            <span>
-              <strong>Check Out</strong>
-              <input
-                type="date"
-                min={checkIn || new Date().toISOString().split("T")[0]}
-                value={checkOut}
-                onChange={(event) => setCheckOut(event.target.value)}
-              />
-            </span>
-          </label>
-
-          <label className="search-field guests-field">
-            <Users size={21} />
-            <span>
-              <strong>Guests</strong>
-              <select
-                value={guests}
-                onChange={(event) => setGuests(event.target.value)}
-              >
-                <option value="1">1 Guest</option>
-                <option value="2">2 Guests</option>
-                <option value="3">3 Guests</option>
-                <option value="4">4 Guests</option>
-                <option value="5">5 Guests</option>
-                <option value="6">6 Guests</option>
-              </select>
-            </span>
-            <ChevronDown size={15} />
-          </label>
-
-          <button className="search-resorts-button" type="submit">
-            <Search size={18} />
-            Search Resorts
-          </button>
-        </form>
-      </section>
 
       <section className="resorts-main">
         <button
@@ -436,7 +370,7 @@ export default function ResortsPage() {
         </button>
 
         <aside
-          className={`resort-filters ${mobileFiltersOpen ? "filters-open" : ""
+          className={`resort-filters  ${mobileFiltersOpen ? "filters-open" : ""
             }`}
         >
           <div className="filter-heading">
@@ -618,8 +552,8 @@ export default function ResortsPage() {
                     <button
                       type="button"
                       className={`favorite-button ${favorites.includes(resort.id)
-                          ? "is-favorite"
-                          : ""
+                        ? "is-favorite"
+                        : ""
                         }`}
                       aria-label={
                         favorites.includes(resort.id)
@@ -777,16 +711,7 @@ export default function ResortsPage() {
         </div>
       </section>
 
-      <footer className="resorts-footer">
-        <p>
-          © {new Date().getFullYear()} HotelReserve. All rights reserved.
-        </p>
-        <div>
-          <Link href="/pages/about">About</Link>
-          <Link href="/pages/contact">Contact</Link>
-          <Link href="/pages/privacy">Privacy Policy</Link>
-        </div>
-      </footer>
+     
     </main>
   );
 }

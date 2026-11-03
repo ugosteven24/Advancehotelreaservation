@@ -372,311 +372,311 @@ export default function PopularHotels() {
   return (
     <main className="">
 
-      <section className="resorts-main">
+      <div className="resorts-results">
 
+        {/* HEADER */}
 
+        <div className="results-heading">
 
-        <div className="resorts-results">
+          <div>
+            <h2>Popular Hotels</h2>
 
-          {/* HEADER */}
-
-          <div className="results-heading">
-
-            <div>
-              <h2>Popular Hotels</h2>
-
-              <p>
-                Showing {filteredHotels.length} of {hotels.length} loaded hotels
-              </p>
-            </div>
-
-            <label className="sort-control">
-              <span>Sort by:</span>
-
-              <select
-                value={sortBy}
-                onChange={(event) =>
-                  setSortBy(event.target.value)
-                }
-              >
-                <option value="popular">Popularity</option>
-                <option value="featured">Featured</option>
-                <option value="rating">Highest Rated</option>
-                <option value="price-low">
-                  Price: Low to High
-                </option>
-                <option value="price-high">
-                  Price: High to Low
-                </option>
-              </select>
-
-              <ChevronDown size={15} />
-            </label>
-
+            <p>
+              Showing {filteredHotels.length} of {hotels.length} loaded hotels
+            </p>
           </div>
 
-          {/* SEARCH */}
+          <label className="sort-control">
+            <span>Sort by:</span>
 
-    
-
-            <input
-            className="hotel-search-input py-14"
-              type="text"
-              placeholder="Search hotel, city or location..."
-              value={searchTerm}
+            <select
+              value={sortBy}
               onChange={(event) =>
-                setSearchTerm(event.target.value)
+                setSortBy(event.target.value)
               }
-            />
-   
+            >
+              <option value="popular">Popularity</option>
+              <option value="featured">Featured</option>
+              <option value="rating">Highest Rated</option>
+              <option value="price-low">
+                Price: Low to High
+              </option>
+              <option value="price-high">
+                Price: High to Low
+              </option>
+            </select>
 
-          {/* INITIAL LOADING */}
+            <ChevronDown size={15} />
+          </label>
 
-          {loading && hotels.length === 0 ? (
-            <div className="destination-loading-inline ">
-              <div className="destination-spinner" />
-              <p>Loading hotels...</p>
-            </div>
-          ) : error && hotels.length === 0 ? (
-            <div className="no-resorts">
-              <h3>Unable to load hotels</h3>
-              <p>{error}</p>
+        </div>
 
-              <button
-                type="button"
-                className="view-details-button"
-                onClick={retryLoading}
+        {/* SEARCH */}
+
+
+
+        <input
+          className="hotel-search-input py-14"
+          type="text"
+          placeholder="Search hotel, city or location..."
+          value={searchTerm}
+          onChange={(event) =>
+            setSearchTerm(event.target.value)
+          }
+        />
+
+
+        {/* INITIAL LOADING */}
+
+        {loading && hotels.length === 0 ? (
+          <div className="destination-loading-inline ">
+            <div className="destination-spinner" />
+            <p>Loading hotels...</p>
+          </div>
+        ) : error && hotels.length === 0 ? (
+          <div className="no-resorts">
+            <h3>Unable to load hotels</h3>
+            <p>{error}</p>
+
+            <button
+              type="button"
+              className="view-details-button"
+              onClick={retryLoading}
+            >
+              Try again
+            </button>
+          </div>
+        ) : filteredHotels.length > 0 ? (
+
+          /* HOTEL GRID */
+
+          <div className="resorts-grid">
+
+            {filteredHotels.map((hotel) => (
+              <article
+                className="resort-card"
+                key={hotel.id}
               >
-                Try again
-              </button>
-            </div>
-          ) : filteredHotels.length > 0 ? (
 
-            /* HOTEL GRID */
+                <div className="resort-image-wrap">
 
-            <div className="resorts-grid">
+                  {hotel.image ? (
+                    <img
+                      src={hotel.image}
+                      alt={hotel.name}
+                      className="resort-image"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="resort-image">
+                      No image available
+                    </div>
+                  )}
 
-              {filteredHotels.map((hotel) => (
-                <article
-                  className="resort-card"
-                  key={hotel.id}
-                >
+                  {hotel.featured && (
+                    <span className="resort-badge popular">
+                      Featured
+                    </span>
+                  )}
 
-                  <div className="resort-image-wrap">
-
-                    {hotel.image ? (
-                      <img
-                        src={hotel.image}
-                        alt={hotel.name}
-                        className="resort-image"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="resort-image">
-                        No image available
-                      </div>
-                    )}
-
-                    {hotel.featured && (
-                      <span className="resort-badge popular">
-                        Featured
-                      </span>
-                    )}
-
-                    <button
-                      type="button"
-                      className={`favorite-button ${
-                        favorites.includes(hotel.id)
-                          ? "is-favorite"
-                          : ""
+                  <button
+                    type="button"
+                    className={`favorite-button ${favorites.includes(hotel.id)
+                        ? "is-favorite"
+                        : ""
                       }`}
-                      aria-label={
+                    aria-label={
+                      favorites.includes(hotel.id)
+                        ? "Remove from favorites"
+                        : "Add to favorites"
+                    }
+                    onClick={() =>
+                      toggleFavorite(hotel.id)
+                    }
+                  >
+                    <Heart
+                      size={19}
+                      fill={
                         favorites.includes(hotel.id)
-                          ? "Remove from favorites"
-                          : "Add to favorites"
+                          ? "currentColor"
+                          : "none"
                       }
-                      onClick={() =>
-                        toggleFavorite(hotel.id)
-                      }
-                    >
-                      <Heart
-                        size={19}
-                        fill={
-                          favorites.includes(hotel.id)
-                            ? "currentColor"
-                            : "none"
-                        }
+                    />
+                  </button>
+
+                  {hotel.rating > 0 && (
+                    <span className="image-rating">
+                      <Star
+                        size={13}
+                        fill="currentColor"
                       />
-                    </button>
 
-                    {hotel.rating > 0 && (
-                      <span className="image-rating">
-                        <Star
-                          size={13}
-                          fill="currentColor"
-                        />
+                      {hotel.rating}
 
-                        {hotel.rating}
-
-                        <span>
-                          ({hotel.reviews})
-                        </span>
+                      <span>
+                        ({hotel.reviews})
                       </span>
+                    </span>
+                  )}
+
+                </div>
+
+                <div className="resort-card-body">
+
+                  <h3>{hotel.name}</h3>
+
+                  <p className="resort-location">
+                    <MapPin size={14} />
+
+                    {hotel.location || "Location unavailable"}
+
+                    <span>·</span>
+
+                    {hotel.type}
+                  </p>
+
+                  {hotel.verified && (
+                    <span className="hotel-verified">
+                      <ShieldCheck size={14} />
+                      Verified property
+                    </span>
+                  )}
+
+                  <div className="resort-amenities">
+
+                    {hotel.amenities.slice(0, 4).map(
+                      (amenity, index) => {
+                        const Icon =
+                          amenityIcons[amenity] || Waves;
+
+                        return (
+                          <span
+                            key={`${amenity}-${index}`}
+                            title={amenity}
+                          >
+                            <Icon size={14} />
+
+                            {amenity === "Fitness Center"
+                              ? "Fitness"
+                              : amenity}
+                          </span>
+                        );
+                      }
                     )}
 
                   </div>
 
-                  <div className="resort-card-body">
+                  <div className="resort-card-bottom">
 
-                    <h3>{hotel.name}</h3>
-
-                    <p className="resort-location">
-                      <MapPin size={14} />
-
-                      {hotel.location || "Location unavailable"}
-
-                      <span>·</span>
-
-                      {hotel.type}
-                    </p>
-
-                    {hotel.verified && (
-                      <span className="hotel-verified">
-                        <ShieldCheck size={14} />
-                        Verified property
-                      </span>
-                    )}
-
-                    <div className="resort-amenities">
-
-                      {hotel.amenities.slice(0, 4).map(
-                        (amenity, index) => {
-                          const Icon =
-                            amenityIcons[amenity] || Waves;
-
-                          return (
-                            <span
-                              key={`${amenity}-${index}`}
-                              title={amenity}
-                            >
-                              <Icon size={14} />
-
-                              {amenity === "Fitness Center"
-                                ? "Fitness"
-                                : amenity}
-                            </span>
-                          );
-                        }
-                      )}
-
-                    </div>
-
-                    <div className="resort-card-bottom">
-
-                      <div className="resort-price">
-                        {/* <strong>
+                    <div className="resort-price">
+                      {/* <strong>
                           {formatPrice(hotel.price)}
                         </strong>
 
                         <span>/ night</span> */}
-                      </div>
-
-                      <Link
-                        href={`/pages/resorts/${encodeURIComponent(
-                          hotel.id
-                        )}`}
-                        className="view-details-button"
-                      >
-                        View Details
-                        <ArrowRight size={15} />
-                      </Link>
-
                     </div>
+
+                    <Link
+                      href={`/pages/hoteldetails/${encodeURIComponent(
+                        hotel.id
+                      )}`}
+                      className="view-details-button"
+                    >
+                      View Details
+                      <ArrowRight size={15} />
+                    </Link>
 
                   </div>
 
-                </article>
-              ))}
+                </div>
 
-            </div>
+              </article>
+            ))}
 
-          ) : (
+          </div>
 
-            /* EMPTY STATE */
+        ) : (
 
-            <div className="no-resorts">
-              <Search size={34} />
+          /* EMPTY STATE */
 
-              <h3>No hotels found</h3>
+          <div className="no-resorts">
+            <Search size={34} />
 
-              <p>
-                Try another search or clear your filters.
-              </p>
+            <h3>No hotels found</h3>
 
-              <button
-                type="button"
-                className="view-details-button"
-                onClick={clearFilters}
-              >
-                Clear Search
-              </button>
-            </div>
-
-          )}
-
-          {/* INFINITE SCROLL */}
-
-          <div
-            ref={sentinelRef}
-            className="infinite-scroll-trigger"
-          />
-
-          {loadingMore && (
-            <div className="destination-loading-inline">
-              <div className="destination-spinner" />
-              <p>Loading more hotels...</p>
-            </div>
-          )}
-
-          {error && hotels.length > 0 && (
-            <div className="infinite-scroll-error">
-              <p>{error}</p>
-
-              <button
-                type="button"
-                onClick={retryLoading}
-              >
-                Try again
-              </button>
-            </div>
-          )}
-
-          {/* MANUAL FALLBACK */}
-
-          {!loading && hasMore && (
-            <div className="load-more-container">
-              <button
-                type="button"
-                className="view-details-button"
-                disabled={loadingMore}
-                onClick={() => fetchHotels(false)}
-              >
-                {loadingMore
-                  ? "Loading..."
-                  : "Load More Hotels"}
-              </button>
-            </div>
-          )}
-
-          {!hasMore && hotels.length > 0 && (
-            <p className="end-of-hotels">
-              You have reached the end of the hotels.
+            <p>
+              Try another search or clear your filters.
             </p>
-          )}
 
-        </div>
+            <button
+              type="button"
+              className="view-details-button"
+              onClick={clearFilters}
+            >
+              Clear Search
+            </button>
+          </div>
 
-      </section>
+        )}
+
+        {/* INFINITE SCROLL */}
+
+        <div
+          ref={sentinelRef}
+          className="infinite-scroll-trigger"
+        />
+
+        {loadingMore && (
+          <div className="destination-loading-inline">
+            <div className="destination-spinner" />
+            <p>Loading more hotels...</p>
+          </div>
+        )}
+
+        {error && hotels.length > 0 && (
+          <div className="infinite-scroll-error">
+            <p>{error}</p>
+
+            <button
+              type="button"
+              onClick={retryLoading}
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* MANUAL FALLBACK */}
+
+
+        {!loading && hasMore && (
+          <div className="flex w-full justify-center items-center py-8">
+            <button
+              type="button"
+              disabled={loadingMore}
+              onClick={() => fetchHotels(false)}
+              className="flex items-center justify-center gap-3 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loadingMore ? (
+                <>
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Loading hotels...
+                </>
+              ) : (
+                "Load More Hotels"
+              )}
+            </button>
+          </div>
+        )}
+
+
+        {!hasMore && hotels.length > 0 && (
+          <p className="end-of-hotels">
+            You have reached the end of the hotels.
+          </p>
+        )}
+
+      </div>
 
     </main>
   );

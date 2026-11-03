@@ -25,8 +25,6 @@ import {
   Dumbbell,
 } from "lucide-react";
 
-import "./resorts.css";
-
 import PopularDestinations from "../components/homepage/PopularDestinations"
 import PopularHotels from "../components/homepage/PopularHotels"
 
@@ -84,18 +82,11 @@ export default function ResortsPage() {
   const [error, setError] = useState("");
 
   const [destination, setDestination] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState("2");
 
-  const [maxPrice, setMaxPrice] = useState(null);
-  const [ratings, setRatings] = useState([]);
-  const [types, setTypes] = useState([]);
-  const [amenities, setAmenities] = useState([]);
-  const [sortBy, setSortBy] = useState("popular");
-  const [favorites, setFavorites] = useState([]);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const observerRef = useRef(null);
   const loadingRef = useRef(false);
@@ -207,112 +198,18 @@ export default function ResortsPage() {
   }, [fetchResorts, loading, loadingMore, hasMore, error]);
 
   // Generate filter choices from records already fetched.
-  const resortTypes = useMemo(
-    () =>
-      [...new Set(resorts.map((resort) => resort.type).filter(Boolean))]
-        .sort(),
-    [resorts]
-  );
 
-  const amenityOptions = useMemo(
-    () =>
-      [...new Set(resorts.flatMap((resort) => resort.amenities))]
-        .filter(Boolean)
-        .sort()
-        .map((value) => ({
-          value,
-          label: value,
-        })),
-    [resorts]
-  );
 
-  const prices = resorts
-    .map((resort) => resort.price)
-    .filter((price) => Number.isFinite(price) && price > 0);
 
-  const minPrice = prices.length
-    ? Math.floor(Math.min(...prices))
-    : 0;
 
-  const highestPrice = prices.length
-    ? Math.ceil(Math.max(...prices))
-    : 0;
-
-  const filteredResorts = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-
-    const result = resorts.filter((resort) => {
-      const matchesDestination =
-        !term ||
-        resort.name.toLowerCase().includes(term) ||
-        resort.location.toLowerCase().includes(term) ||
-        resort.country.toLowerCase().includes(term);
-
-      const matchesPrice =
-        maxPrice === null || resort.price <= maxPrice;
-
-      const matchesRating =
-        ratings.length === 0 ||
-        ratings.some((rating) => resort.rating >= rating);
-
-      const matchesType =
-        types.length === 0 || types.includes(resort.type);
-
-      const matchesAmenities = amenities.every((amenity) =>
-        resort.amenities.includes(amenity)
-      );
-
-      return (
-        matchesDestination &&
-        matchesPrice &&
-        matchesRating &&
-        matchesType &&
-        matchesAmenities
-      );
-    });
-
-    if (sortBy === "price-low") {
-      result.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "price-high") {
-      result.sort((a, b) => b.price - a.price);
-    } else if (sortBy === "rating") {
-      result.sort((a, b) => b.rating - a.rating);
-    } else {
-      result.sort((a, b) => b.reviews - a.reviews);
-    }
-
-    return result;
-  }, [resorts, searchTerm, maxPrice, ratings, types, amenities, sortBy]);
-
-  function toggleValue(value, values, setValues) {
-    setValues((previous) =>
-      previous.includes(value)
-        ? previous.filter((item) => item !== value)
-        : [...previous, value]
-    );
-  }
 
   function handleSearch(event) {
     event.preventDefault();
     setSearchTerm(destination);
   }
 
-  function clearFilters() {
-    setMaxPrice(null);
-    setRatings([]);
-    setTypes([]);
-    setAmenities([]);
-    setDestination("");
-    setSearchTerm("");
-  }
+  
 
-  function toggleFavorite(id) {
-    setFavorites((previous) =>
-      previous.includes(id)
-        ? previous.filter((item) => item !== id)
-        : [...previous, id]
-    );
-  }
 
   return (
     <main className="">
@@ -420,16 +317,7 @@ export default function ResortsPage() {
     
       </div>
 
-      <footer className="resorts-footer">
-        <p>
-          © {new Date().getFullYear()} HotelReserve. All rights reserved.
-        </p>
-        <div>
-          <Link href="/pages/about">About</Link>
-          <Link href="/pages/contact">Contact</Link>
-          <Link href="/pages/privacy">Privacy Policy</Link>
-        </div>
-      </footer>
+     
     </main>
   );
 }

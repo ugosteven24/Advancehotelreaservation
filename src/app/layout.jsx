@@ -4,7 +4,10 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import "./global.css"
 import { getUserId } from "@/lib/session";
-import Menu from "./menu/menu";
+import GuestMenu from "./Guestmenu/guestmenu";
+import ClientMenu from "./Clientmenu/clientmenu";
+import Footer from "@/components/footer/Footer";
+import "./resorts.css";
 const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta-sans",
   subsets: ["latin"],
@@ -45,9 +48,10 @@ export default async function RootLayout({ children }) {
       </head>
 
       <body className="resorts-page">
-        <Menu/>
+        {(await getUserId()) ? <ClientMenu/> : <GuestMenu/>}
+   
         {children}
-        
+        <Footer/>
         </body>
     </html>
   );

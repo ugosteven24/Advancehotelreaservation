@@ -6,29 +6,16 @@ import Link from "next/link";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/firebase";
 import {
-  Search,
-  MapPin,
-  CalendarDays,
-  Users,
-  Heart,
-
-  SlidersHorizontal,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ArrowRight,
-  Waves,
-  Wifi,
-  Utensils,
-  Dumbbell,
   ShieldCheck,
+
+  ArrowRight,
+
   Headset,
   Star,
-  Menu,
-  X,
-} from "lucide-react";
 
-import "./destination.css";
+} from "lucide-react";
+import "../about/about.css";
+
 
 
 export default function ResortsPage() {
@@ -103,7 +90,36 @@ export default function ResortsPage() {
 
   return (
     <main className="resorts-page">
-    
+      <section className="about-hero">
+        <div className="about-hero-content">
+          <span className="about-eyebrow">
+            ABOUT HOTELRESERVE
+          </span>
+
+          <h1>
+            Making every stay
+            <span> worth remembering.</span>
+          </h1>
+
+          <p>
+            We believe finding the right place to stay should be
+            simple, convenient, and enjoyable. HotelReserve helps
+            travellers discover accommodation and plan their next
+            getaway with confidence.
+          </p>
+
+          <div className="about-hero-actions">
+            <Link href="/pages/resorts" className="about-primary-btn">
+              Explore Resorts <ArrowRight size={18} />
+            </Link>
+
+            <Link href="/pages/contact" className="about-outline-btn">
+              Contact Us
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-5 px-margin-mobile pb-16 pt-16 pl-0 md:px-margin lg:px-14">
         {/* Section heading */}
         <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -127,7 +143,7 @@ export default function ResortsPage() {
             </p>
           </div>
 
-         
+
         </div>
 
         {/* Loading state */}
@@ -324,16 +340,6 @@ export default function ResortsPage() {
         </div>
       </section>
 
-      <footer className="resorts-footer">
-        <p>
-          © {new Date().getFullYear()} HotelReserve. All rights reserved.
-        </p>
-        <div>
-          <Link href="/pages/about">About</Link>
-          <Link href="/pages/contact">Contact</Link>
-          <Link href="/pages/privacy">Privacy Policy</Link>
-        </div>
-      </footer>
     </main>
   );
 }

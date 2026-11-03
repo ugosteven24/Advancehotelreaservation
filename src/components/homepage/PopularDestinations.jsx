@@ -101,7 +101,7 @@ export default function PopularDestinations() {
                 </div>
 
                 <Link
-                    href="/search"
+                    href="/pages/destinations"
                     className="inline-flex items-center gap-1 font-label-md text-primary transition-colors hover:opacity-75"
                 >
                     <span>Explore all destinations</span>
@@ -157,7 +157,7 @@ export default function PopularDestinations() {
                         {destinations.map((destination) => (
                             <Link
                                 key={destination.city.toLowerCase()}
-                                href={`/search?destination=${encodeURIComponent(
+                                href={`/search?destinationdetails=${encodeURIComponent(
                                     destination.city
                                 )}`}
                                 className="group relative h-52 overflow-hidden rounded-xl shadow-md"
@@ -201,7 +201,7 @@ export default function PopularDestinations() {
                         {destinations.map((destination) => (
                             <Link
                                 key={destination.city.toLowerCase()}
-                                href={`/search?destination=${encodeURIComponent(
+                                href={`/pages/destinationdetails?destination=${encodeURIComponent(
                                     destination.city
                                 )}`}
                                 className="group relative h-64 overflow-hidden rounded-2xl shadow-md"
@@ -249,7 +249,7 @@ export default function PopularDestinations() {
                             return (
                                 <Link
                                     key={destination.city.toLowerCase()}
-                                    href={`/search?destination=${encodeURIComponent(
+                                    href={`/pages/destinationdetails?destination=${encodeURIComponent(
                                         destination.city
                                     )}`}
                                     aria-label={`Explore ${destination.city}, ${destination.length} hotels`}

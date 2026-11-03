@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import ProfileImage from "@/components/component/profileImage";
 import { usePathname } from "next/navigation";
 import {
   Search,
@@ -9,16 +10,17 @@ import {
   Heart,
   Waves,
 } from "lucide-react";
- import "./menu.css"
+
 export default function Menu() {
   const pathname = usePathname();
 
   const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Resorts", href: "/pages/resorts" },
-    { name: "Destinations", href: "/pages/destinations" },
-    { name: "Contact", href: "/pages/contact" },
-    { name: "About", href: "/pages/about" },
+    { name: "Home", href: "/dashboard" },
+    { name: "Explore", href: "/dashboard/explore" },
+    { name: "Favorites", href: "/dashboard/favorites" },
+    { name: "My-booking", href: "/dashboard/mybooking" },
+    { name: "Notification", href: "/dashboard/notification" },
+    { name: "Profile", href: "/dashboard/profile" },
   ];
 
   return (
@@ -62,17 +64,11 @@ export default function Menu() {
           <Search size={20} />
         </button>
 
-        <Link
-          href="/favorites"
-          className="header-icon"
-          aria-label="Favorites"
-        >
-          <Heart size={20} />
-        </Link>
+   
 
         <Link href="/login" className="signin-link">
-          <Users size={18} />
-          <span>Sign In / Register</span>
+          <ProfileImage />
+          <span>Sign Out </span>
         </Link>
 
         <Link href="/my-bookings" className="bookings-button">
