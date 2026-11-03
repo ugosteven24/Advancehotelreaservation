@@ -316,11 +316,11 @@
 }
 
 .resorts-main {
-    max-width: 1300px;
-    width: 87%;
+    max-width:auto;
+    width: auto;
     margin: 28px auto 40px;
     display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns: 100% minmax(0, 1fr);
     align-items: start;
     gap: 22px;
 }
@@ -483,7 +483,7 @@
 
 .resorts-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 18px;
 }
 
@@ -1054,7 +1054,7 @@
     }
 
     .resorts-main {
-        width: 92%;
+        width: auto;
         margin-top: 23px;
         gap: 14px;
     }
