@@ -127,16 +127,7 @@ export default function ResortsPage() {
             </p>
           </div>
 
-          <Link
-            href="/search"
-            className="inline-flex items-center gap-1 font-label-md text-primary transition-colors hover:opacity-75"
-          >
-            <span>Explore all destinations</span>
-
-            <span className="material-symbols-outlined text-[18px]">
-              arrow_forward
-            </span>
-          </Link>
+         
         </div>
 
         {/* Loading state */}
