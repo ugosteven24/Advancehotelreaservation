@@ -2,7 +2,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-
+import Menu from "./menu/menu";
 import { getUserId } from "@/lib/session";
 
 const geistSans = Geist({
@@ -23,7 +23,7 @@ export const metadata = {
 // Pages where signed-in users should be redirected to the dashboard.
 const GUEST_ONLY_PATHS = ["/", "/login", "/register"];
 
-export default async function RootLayout({ children }) {
+export default async function AdminLayout({ children }) {
   // Read the pathname supplied by proxy.js.
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") ?? "";
@@ -45,7 +45,7 @@ export default async function RootLayout({ children }) {
         />
       </head>
 
-      <body>{children}</body>
+      <body className="resorts-page"> <Menu/> {children}</body>
     </html>
   );
 }

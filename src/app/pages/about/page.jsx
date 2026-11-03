@@ -260,66 +260,8 @@ export default function ResortsPage() {
   }
 
   return (
-    <main className="resorts-page">
-      <header className="resorts-header">
-        <Link href="/" className="resorts-brand">
-          <span className="brand-mark">
-            <Waves size={25} />
-          </span>
-          <span>
-            <strong>HotelReserve</strong>
-            <small>Stay Better. Travel Further.</small>
-          </span>
-        </Link>
+    <main className="">
 
-        <nav className="resorts-nav">
-          <Link href="/" >Home</Link>
-          <Link href="/pages/resorts">Resorts</Link>
-          <Link href="/pages/favorites" >
-            Favorites
-          </Link>
-          <Link href="/pages/flights">Flights</Link>
-          <Link href="/pages/destinations">Destinations</Link>
-          <Link href="/pages/about" className="active">About</Link>
-        </nav>
-
-        <div className="header-actions">
-          <button
-            type="button"
-            className="header-icon"
-            aria-label="Open search"
-            onClick={() =>
-              document
-                .getElementById("resort-search")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-          >
-            <Search size={20} />
-          </button>
-
-          <Link
-            href="/favorites"
-            className="header-icon"
-            aria-label="Favorites"
-          >
-            <Heart size={20} />
-            {favorites.length > 0 && (
-              <span className="favorite-count">
-                {favorites.length}
-              </span>
-            )}
-          </Link>
-
-          <Link href="/login" className="signin-link">
-            <Users size={18} />
-            <span>Sign In / Register</span>
-          </Link>
-
-          <Link href="/my-bookings" className="bookings-button">
-            My Bookings
-          </Link>
-        </div>
-      </header>
 
       <section className="resort-hero">
         <div className="hero-overlay" />

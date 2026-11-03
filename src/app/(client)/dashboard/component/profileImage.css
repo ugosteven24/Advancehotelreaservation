@@ -1,0 +1,37 @@
+
+.user-profile-image,
+.profile-image-placeholder,
+.profile-image-fallback {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.user-profile-image {
+  display: block;
+  object-fit: cover;
+  border: 2px solid #e3eae6;
+}
+
+.profile-image-placeholder {
+  background: #e8f5f0;
+  animation: profile-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.profile-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8f5f0;
+  color: #176b5b;
+}
+
+.profile-image-fallback .material-symbols-outlined {
+  font-size: 27px;
+}
+
+@keyframes profile-pulse {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}

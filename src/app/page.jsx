@@ -19,25 +19,17 @@ import {
   Heart,
   SlidersHorizontal,
   ChevronDown,
-  ArrowRight,
   Waves,
   Wifi,
   Utensils,
   Dumbbell,
-  ShieldCheck,
-  Headset,
-  Star,
-  X,
 } from "lucide-react";
 
 import "./resorts.css";
 
 import PopularDestinations from "../components/homepage/PopularDestinations"
 import PopularHotels from "../components/homepage/PopularHotels"
-import GreatStays from "../components/homepage/GreatStays"
-import WhyTravel from "../components/homepage/WhyTravelers"
-import HowItWorks from "../components/homepage//HowItWorks"
-import Location from "./location/location"
+
 const PAGE_SIZE = 12;
 
 const amenityIcons = {
@@ -323,66 +315,8 @@ export default function ResortsPage() {
   }
 
   return (
-    <main className="resorts-page">
-      <header className="resorts-header">
-        <Link href="/" className="resorts-brand">
-          <span className="brand-mark">
-            <Waves size={25} />
-          </span>
-          <span>
-            <strong>HotelReserve</strong>
-            <small>Stay Better. Travel Further.</small>
-          </span>
-        </Link>
-
-        <nav className="resorts-nav">
-          <Link href="/" className="active">Home</Link>
-          <Link href="/pages/resorts" >Resorts</Link>
-          <Link href="/pages/favorites" >
-            Favorites
-          </Link>
-          <Link href="/pages/flights">Flights</Link>
-          <Link href="/pages/destinations">Destinations</Link>
-          <Link href="/pages/about">About</Link>
-        </nav>
-
-        <div className="header-actions">
-          <button
-            type="button"
-            className="header-icon"
-            aria-label="Open search"
-            onClick={() =>
-              document
-                .getElementById("resort-search")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-          >
-            <Search size={20} />
-          </button>
-
-          <Link
-            href="/favorites"
-            className="header-icon"
-            aria-label="Favorites"
-          >
-            <Heart size={20} />
-            {favorites.length > 0 && (
-              <span className="favorite-count">
-                {favorites.length}
-              </span>
-            )}
-          </Link>
-
-          <Link href="/login" className="signin-link">
-            <Users size={18} />
-            <span>Sign In / Register</span>
-          </Link>
-
-          <Link href="/my-bookings" className="bookings-button">
-            My Bookings
-          </Link>
-        </div>
-      </header>
+    <main className="">
+ 
 
       <section className="resort-hero">
         <div className="hero-overlay" />
@@ -480,12 +414,10 @@ export default function ResortsPage() {
       </section>
 
 
-      <div className="px-9">
+      <div className="px-5 lg:px-19">
         <PopularDestinations />
         <PopularHotels />
-        <GreatStays />
-        <WhyTravel />
-        <HowItWorks />
+    
       </div>
 
       <footer className="resorts-footer">

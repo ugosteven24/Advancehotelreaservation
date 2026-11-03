@@ -58,27 +58,33 @@ function normalizeResort(data, id) {
     data.imageUrl ||
     data.photoURL ||
     data.coverImage
-    "";
+  "";
 
   return {
     id,
-    name: data.name || data.title || "Unnamed resort",
+    name: data.hotelName || "Unnamed hotel",
     location: location || data.address || "Location unavailable",
     country: data.country || "",
-    type: data.type || data.resortType || "",
-    price: Number(
-      data.pricePerNight ?? data.price ?? data.nightlyPrice ?? 0
-    ),
-    rating: Number(data.rating || 0),
-    reviews: Number(data.reviews ?? data.reviewCount ?? 0),
+    type: data.category || "",
+    price: Number(data.price || 0),
+    rating: getStarRating(data.starRating),
+    reviews: Number(data.reviewCount || 0),
     badge: data.badge || "",
     badgeType: data.badgeType || "",
     amenities: Array.isArray(data.amenities) ? data.amenities : [],
     image,
-    status: String(data.status || "active").toLowerCase(),
+    status: String(data.status || "").toLowerCase(),
   };
 }
 
+function getStarRating(value) {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  const match = String(value || "").match(/\d+/);
+  return match ? Number(match[0]) : 0;
+}
 export default function ResortsPage() {
   const [resorts, setResorts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -318,65 +324,7 @@ export default function ResortsPage() {
 
   return (
     <main className="resorts-page">
-      <header className="resorts-header">
-        <Link href="/" className="resorts-brand">
-          <span className="brand-mark">
-            <Waves size={25} />
-          </span>
-          <span>
-            <strong>HotelReserve</strong>
-            <small>Stay Better. Travel Further.</small>
-          </span>
-        </Link>
-
-        <nav className="resorts-nav">
-          <Link href="/">Home</Link>
-          <Link href="/pages/resorts" className="active">Resorts</Link>
-          <Link href="/pages/favorites" >
-            Favorites
-          </Link>
-          <Link href="/pages/flights">Flights</Link>
-          <Link href="/pages/destinations">Destinations</Link>
-          <Link href="/pages/about">About</Link>
-        </nav>
-
-        <div className="header-actions">
-          <button
-            type="button"
-            className="header-icon"
-            aria-label="Open search"
-            onClick={() =>
-              document
-                .getElementById("resort-search")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-          >
-            <Search size={20} />
-          </button>
-
-          <Link
-            href="/favorites"
-            className="header-icon"
-            aria-label="Favorites"
-          >
-            <Heart size={20} />
-            {favorites.length > 0 && (
-              <span className="favorite-count">
-                {favorites.length}
-              </span>
-            )}
-          </Link>
-
-          <Link href="/login" className="signin-link">
-            <Users size={18} />
-            <span>Sign In / Register</span>
-          </Link>
-
-          <Link href="/my-bookings" className="bookings-button">
-            My Bookings
-          </Link>
-        </div>
-      </header>
+   
 
       <section className="resort-hero">
         <div className="hero-overlay" />
@@ -488,9 +436,8 @@ export default function ResortsPage() {
         </button>
 
         <aside
-          className={`resort-filters ${
-            mobileFiltersOpen ? "filters-open" : ""
-          }`}
+          className={`resort-filters ${mobileFiltersOpen ? "filters-open" : ""
+            }`}
         >
           <div className="filter-heading">
             <h2>
@@ -670,11 +617,10 @@ export default function ResortsPage() {
 
                     <button
                       type="button"
-                      className={`favorite-button ${
-                        favorites.includes(resort.id)
+                      className={`favorite-button ${favorites.includes(resort.id)
                           ? "is-favorite"
                           : ""
-                      }`}
+                        }`}
                       aria-label={
                         favorites.includes(resort.id)
                           ? "Remove from favorites"
