@@ -590,7 +590,7 @@
 
   border: 1px solid #e5e7eb;
 
-  border-radius: 12px;
+  border-radius: 4px;
 
   outline: none;
 
@@ -846,7 +846,7 @@
 
   border: 1px solid #111111;
 
-  border-radius: 12px;
+  border-radius: 5px;
 
   background: #111111;
 
@@ -1208,9 +1208,9 @@
     width: 100%;
     max-width: 440px;
     margin: auto;
-    padding: 28px 24px;
+    padding: 20px 20px;
     border: 1px solid rgba(255, 255, 255, 0.45);
-    border-radius: 20px;
+    border-radius: 4px;
     background: rgba(255, 255, 255, 0.96);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   }

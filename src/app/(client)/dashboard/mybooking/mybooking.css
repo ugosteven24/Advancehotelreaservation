@@ -1,0 +1,101 @@
+.mybookings-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 36px 20px 64px;
+}
+
+.mybookings-page h1 { margin: 0 0 6px; font-size: 28px; color: var(--resort-dark, #14294b); }
+.mybookings-sub { margin: 0 0 24px; color: var(--resort-muted, #6c7d97); font-size: 14px; }
+
+.mybookings-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+
+.mybookings-tab {
+  padding: 8px 16px;
+  border: 1px solid var(--resort-border, #e5edf6);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--resort-dark, #14294b);
+}
+
+.mybookings-tab.active {
+  background: var(--resort-blue, #0866ed);
+  border-color: var(--resort-blue, #0866ed);
+  color: #fff;
+}
+
+.mybookings-list { display: grid; gap: 16px; }
+
+.mybooking-card {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--resort-border, #e5edf6);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.mybooking-card img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #eef3fb;
+}
+
+.mybooking-info h3 { margin: 0 0 4px; font-size: 17px; color: var(--resort-dark, #14294b); }
+.mybooking-info p { margin: 2px 0; font-size: 13px; color: var(--resort-muted, #6c7d97); }
+.mybooking-number { font-weight: 700; color: var(--resort-dark, #14294b); }
+
+.mybooking-side { display: grid; gap: 10px; justify-items: end; text-align: right; }
+.mybooking-total { font-size: 18px; font-weight: 800; color: var(--resort-dark, #14294b); }
+
+.mybooking-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.mybooking-badge.pending { background: #fef3c7; color: #92400e; }
+.mybooking-badge.confirmed { background: #dcfce7; color: #15803d; }
+.mybooking-badge.completed { background: #dbeafe; color: #1d4ed8; }
+.mybooking-badge.cancelled { background: #fee2e2; color: #b91c1c; }
+
+.mybooking-actions { display: flex; gap: 8px; }
+
+.mybooking-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--resort-border, #e5edf6);
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--resort-dark, #14294b);
+}
+
+.mybooking-btn.danger { color: #b91c1c; border-color: #fecaca; }
+
+.mybookings-empty {
+  text-align: center;
+  padding: 64px 20px;
+  background: #fff;
+  border: 1px dashed var(--resort-border, #e5edf6);
+  border-radius: 16px;
+  color: var(--resort-muted, #6c7d97);
+}
+
+.mybookings-empty a { color: var(--resort-blue, #0866ed); font-weight: 700; }
+
+@media (max-width: 760px) {
+  .mybooking-card { grid-template-columns: 1fr; }
+  .mybooking-side { justify-items: start; text-align: left; }
+}

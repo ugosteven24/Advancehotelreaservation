@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 import "./login.css";
 import {
   Mail,
@@ -28,6 +29,16 @@ import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/firebase/firebase";
 import { createSession } from "@/lib/session";
 
+const BUTTON_COLOR = "#0866ed";
+
+const notify = (icon, title, text) =>
+  Swal.fire({
+    icon,
+    title,
+    text,
+    confirmButtonColor: BUTTON_COLOR,
+  });
+
 // Writes the user's id into the session cookie through the server action in
 // "@/lib/session". If it fails, sign out of Firebase too so the browser is
 // not left half logged in.
@@ -45,7 +56,7 @@ async function startSession(user, remember) {
   }
 }
 
-export default function LoginPage() {
+export default function SigninPage() {
   const router = useRouter();
 
   const [form, setForm] = useState({ email: "", password: "" });
@@ -54,9 +65,6 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
     setForm((previous) => ({
@@ -72,11 +80,8 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    setError("");
-    setMessage("");
-
     if (!form.email || !form.password) {
-      setError("Please enter your email and password.");
+      notify("warning", "Invalid request", "Please enter your email and password.");
       return;
     }
 
@@ -91,33 +96,45 @@ export default function LoginPage() {
 
       await startSession(result.user, remember);
 
+      await Swal.fire({
+        icon: "success",
+        title: "Login successful",
+        text: "You have been logged in.",
+        confirmButtonColor: BUTTON_COLOR,
+        timer: 1500,
+      });
+
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
       console.error(error);
 
+      let text;
+
       switch (error.code) {
         case "auth/invalid-credential":
-          setError("Invalid email or password.");
+          text = "Invalid email or password.";
           break;
         case "auth/user-not-found":
-          setError("No account was found with this email.");
+          text = "No account was found with this email.";
           break;
         case "auth/wrong-password":
-          setError("Incorrect password.");
+          text = "Incorrect password.";
           break;
         case "auth/invalid-email":
-          setError("Please enter a valid email address.");
+          text = "Please enter a valid email address.";
           break;
         case "auth/user-disabled":
-          setError("This account has been disabled.");
+          text = "This account has been disabled.";
           break;
         case "auth/too-many-requests":
-          setError("Too many attempts. Please wait and try again.");
+          text = "Too many attempts. Please wait and try again.";
           break;
         default:
-          setError(error.message || "Unable to sign in. Please try again.");
+          text = error.message || "Unable to sign in. Please try again.";
       }
+
+      notify("error", "Login failed", text);
     } finally {
       setLoading(false);
     }
@@ -128,9 +145,6 @@ export default function LoginPage() {
   // ==========================================
 
   const handleGoogleLogin = async () => {
-    setError("");
-    setMessage("");
-
     try {
       setGoogleLoading(true);
 
@@ -161,6 +175,14 @@ export default function LoginPage() {
 
       await startSession(user, remember);
 
+      await Swal.fire({
+        icon: "success",
+        title: "Login successful",
+        text: "You have been logged in with Google.",
+        confirmButtonColor: BUTTON_COLOR,
+        timer: 1500,
+      });
+
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
@@ -169,18 +191,28 @@ export default function LoginPage() {
       switch (error.code) {
         case "auth/popup-closed-by-user":
         case "auth/cancelled-popup-request":
-          setError("Google sign-in was cancelled.");
+          notify("info", "Cancelled", "Google sign-in was cancelled.");
           break;
         case "auth/popup-blocked":
-          setError("Your browser blocked the Google sign-in popup.");
+          notify(
+            "error",
+            "Popup blocked",
+            "Your browser blocked the Google sign-in popup."
+          );
           break;
         case "auth/account-exists-with-different-credential":
-          setError(
+          notify(
+            "error",
+            "Account exists",
             "An account already exists with this email using another sign-in method."
           );
           break;
         default:
-          setError(error.message || "Google sign-in failed. Please try again.");
+          notify(
+            "error",
+            "Google sign-in failed",
+            error.message || "Google sign-in failed. Please try again."
+          );
       }
     } finally {
       setGoogleLoading(false);
@@ -192,29 +224,30 @@ export default function LoginPage() {
   // ==========================================
 
   const handleForgotPassword = async () => {
-    setError("");
-    setMessage("");
-
     if (!form.email) {
-      setError("Enter your email address first.");
+      notify("warning", "Email required", "Enter your email address first.");
       return;
     }
 
     try {
       await sendPasswordResetEmail(auth, form.email.trim());
-      setMessage("Password reset email sent. Check your inbox.");
+      notify(
+        "success",
+        "Email sent",
+        "Password reset email sent. Check your inbox."
+      );
     } catch (error) {
       console.error(error);
 
       switch (error.code) {
         case "auth/user-not-found":
-          setError("No account was found with this email.");
+          notify("error", "Not found", "No account was found with this email.");
           break;
         case "auth/invalid-email":
-          setError("Please enter a valid email.");
+          notify("error", "Invalid email", "Please enter a valid email.");
           break;
         default:
-          setError("Unable to send password reset email.");
+          notify("error", "Error", "Unable to send password reset email.");
       }
     }
   };
@@ -302,18 +335,6 @@ export default function LoginPage() {
             <h2>Welcome back</h2>
             <p>Sign in to continue to your account.</p>
           </div>
-
-          {error && (
-            <div className="login-alert login-alert--error" role="alert">
-              {error}
-            </div>
-          )}
-
-          {message && (
-            <div className="login-alert login-alert--success" role="status">
-              {message}
-            </div>
-          )}
 
           <button
             type="button"

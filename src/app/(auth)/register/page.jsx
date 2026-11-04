@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 import "./register.css"
 import {
   Mail,
@@ -19,13 +20,41 @@ import {
 import {
   createUserWithEmailAndPassword,
   updateProfile,
+  signOut,
 } from "firebase/auth";
 
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { auth, db } from "@/firebase/firebase";
+import { createSession } from "@/lib/session";
 
-export default function RegisterPage() {
+const BUTTON_COLOR = "#0866ed";
+
+const notify = (icon, title, text) =>
+  Swal.fire({
+    icon,
+    title,
+    text,
+    confirmButtonColor: BUTTON_COLOR,
+  });
+
+// Writes the user's id into the session cookie (same helper as the login page).
+// If it fails, sign out of Firebase too so the browser is not left half logged in.
+async function startSession(user) {
+  try {
+    const idToken = await user.getIdToken();
+    const result = await createSession(idToken, true);
+
+    if (!result.ok) {
+      throw new Error(result.message || "Unable to create session.");
+    }
+  } catch (err) {
+    await signOut(auth).catch(() => {});
+    throw err;
+  }
+}
+
+export default function SignupPage() {
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -40,7 +69,6 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({
@@ -52,8 +80,6 @@ export default function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    setError("");
-
     if (
       !form.firstName ||
       !form.lastName ||
@@ -61,17 +87,21 @@ export default function RegisterPage() {
       !form.password ||
       !form.confirmPassword
     ) {
-      setError("Please fill in all fields.");
+      notify("warning", "Invalid request", "Please fill in all fields.");
       return;
     }
 
     if (form.password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      notify(
+        "warning",
+        "Weak password",
+        "Password must be at least 6 characters."
+      );
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
+      notify("warning", "Invalid request", "Passwords do not match.");
       return;
     }
 
@@ -107,26 +137,50 @@ export default function RegisterPage() {
         createdAt: serverTimestamp(),
       });
 
+      // Create the session cookie so the server recognises the new user
+      await startSession(user);
+
+      await Swal.fire({
+        icon: "success",
+        title: "Account created",
+        text: "Your account has been created successfully.",
+        confirmButtonColor: BUTTON_COLOR,
+        timer: 1800,
+      });
+
       // Redirect to customer dashboard
       router.push("/dashboard");
+      router.refresh();
     } catch (error) {
       console.error(error);
 
       switch (error.code) {
         case "auth/email-already-in-use":
-          setError("An account already exists with this email.");
+          notify(
+            "error",
+            "Registration failed",
+            "An account already exists with this email."
+          );
           break;
 
         case "auth/invalid-email":
-          setError("Please enter a valid email address.");
+          notify(
+            "error",
+            "Registration failed",
+            "Please enter a valid email address."
+          );
           break;
 
         case "auth/weak-password":
-          setError("Password is too weak.");
+          notify("error", "Registration failed", "Password is too weak.");
           break;
 
         default:
-          setError("Something went wrong. Please try again.");
+          notify(
+            "error",
+            "Registration failed",
+            "Something went wrong. Please try again."
+          );
       }
     } finally {
       setLoading(false);
@@ -230,13 +284,6 @@ export default function RegisterPage() {
               Join us and start discovering amazing places to stay.
             </p>
           </div>
-
-          {/* Error */}
-          {error && (
-            <div className="register-error" role="alert">
-              {error}
-            </div>
-          )}
 
           {/* Form */}
           <form
@@ -413,11 +460,11 @@ export default function RegisterPage() {
 
               <label htmlFor="acceptTerms">
                 I agree to the{" "}
-                <Link href="/terms" className="register-text-link">
+                <Link href="/pages/terms" className="register-text-link">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="register-text-link">
+                <Link href="/pages/privacy" className="register-text-link">
                   Privacy Policy
                 </Link>
                 .

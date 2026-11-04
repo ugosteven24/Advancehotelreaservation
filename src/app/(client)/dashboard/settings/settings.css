@@ -1,0 +1,70 @@
+.settings-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 36px 20px 64px;
+}
+
+.settings-page h1 { margin: 0 0 6px; font-size: 28px; color: var(--resort-dark, #14294b); }
+.settings-sub { margin: 0 0 26px; color: var(--resort-muted, #6c7d97); font-size: 14px; }
+
+.settings-card {
+  background: #fff;
+  border: 1px solid var(--resort-border, #e5edf6);
+  border-radius: 16px;
+  padding: 26px;
+  margin-bottom: 20px;
+}
+
+.settings-card h2 { margin: 0 0 4px; font-size: 18px; color: var(--resort-dark, #14294b); }
+.settings-card > p { margin: 0 0 18px; font-size: 13px; color: var(--resort-muted, #6c7d97); }
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--resort-border, #e5edf6);
+}
+
+.settings-toggle strong { display: block; font-size: 14px; color: var(--resort-dark, #14294b); }
+.settings-toggle span { font-size: 12px; color: var(--resort-muted, #6c7d97); }
+.settings-toggle input { width: 20px; height: 20px; accent-color: var(--resort-blue, #0866ed); cursor: pointer; }
+
+.settings-field { display: grid; gap: 6px; margin-bottom: 14px; }
+.settings-field label { font-size: 13px; font-weight: 600; color: var(--resort-dark, #14294b); }
+
+.settings-field input,
+.settings-field select {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--resort-border, #e5edf6);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+
+.settings-field input:focus,
+.settings-field select:focus {
+  border-color: var(--resort-blue, #0866ed);
+  box-shadow: 0 0 0 3px rgba(8, 102, 237, 0.12);
+}
+
+.settings-button {
+  height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--resort-blue, #0866ed);
+  color: #fff;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.settings-button:disabled { opacity: 0.65; cursor: not-allowed; }
+.settings-links { font-size: 13px; color: var(--resort-muted, #6c7d97); }
+.settings-links a { color: var(--resort-blue, #0866ed); font-weight: 600; }

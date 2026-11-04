@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description: "Book your perfect stay with us",
 };
 
-export default function RootLayout({
+export default function AuthLayout({
   children,
 }: {
   children: ReactNode;

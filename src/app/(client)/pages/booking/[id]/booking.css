@@ -1,0 +1,149 @@
+.booking-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 36px 20px 64px;
+}
+
+.booking-page h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  color: var(--resort-dark, #14294b);
+}
+
+.booking-sub {
+  margin: 0 0 28px;
+  color: var(--resort-muted, #6c7d97);
+  font-size: 14px;
+}
+
+.booking-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.booking-card {
+  background: #fff;
+  border: 1px solid var(--resort-border, #e5edf6);
+  border-radius: 16px;
+  padding: 26px;
+}
+
+.booking-card h2 {
+  margin: 0 0 18px;
+  font-size: 17px;
+  color: var(--resort-dark, #14294b);
+}
+
+.booking-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.booking-field {
+  display: grid;
+  gap: 6px;
+}
+
+.booking-field.full { grid-column: 1 / -1; }
+
+.booking-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--resort-dark, #14294b);
+}
+
+.booking-field input,
+.booking-field select,
+.booking-field textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--resort-border, #e5edf6);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+
+.booking-field textarea { min-height: 96px; resize: vertical; }
+
+.booking-field input:focus,
+.booking-field select:focus,
+.booking-field textarea:focus {
+  border-color: var(--resort-blue, #0866ed);
+  box-shadow: 0 0 0 3px rgba(8, 102, 237, 0.12);
+}
+
+.booking-summary img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: #eef3fb;
+}
+
+.booking-summary h3 { margin: 0 0 4px; font-size: 17px; }
+
+.booking-location {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--resort-muted, #6c7d97);
+}
+
+.booking-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--resort-border, #e5edf6);
+}
+
+.booking-line.total {
+  border-bottom: 0;
+  font-weight: 800;
+  font-size: 16px;
+  padding-top: 14px;
+}
+
+.booking-submit {
+  width: 100%;
+  margin-top: 18px;
+  height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--resort-blue, #0866ed);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.booking-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.booking-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--resort-muted, #6c7d97);
+  text-align: center;
+}
+
+.booking-state {
+  min-height: 50vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--resort-muted, #6c7d97);
+}
+
+@media (max-width: 860px) {
+  .booking-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .booking-grid { grid-template-columns: 1fr; }
+}
