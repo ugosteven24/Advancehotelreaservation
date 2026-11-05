@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-
+import "./popular.css";
 import {
   Search,
   MapPin,
@@ -18,7 +18,7 @@ import {
   Star,
   X,
 } from "lucide-react";
-
+import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   documentId,
@@ -26,11 +26,15 @@ import {
   limit,
   orderBy,
   query,
+  doc,
+  setDoc,
+  deleteDoc,
+  serverTimestamp,
   startAfter,
 } from "firebase/firestore";
 
-import { db } from "@/firebase/firebase";
 
+import { auth, db } from "@/firebase/firebase";
 const PAGE_SIZE = 6;
 
 const amenityIcons = {
@@ -141,6 +145,51 @@ export default function PopularHotels() {
 
   const sentinelRef = useRef(null);
 
+  const [user, setUser] = useState(null);
+
+  const [authLoading, setAuthLoading] = useState(true);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+
+  // ----------------------------------------
+  // AUTHENTICATION AND RESTORE FAVORITES
+  // ----------------------------------------
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+
+      if (!currentUser) {
+        setFavorites([]);
+        setAuthLoading(false);
+        return;
+      }
+
+      try {
+        const favoritesRef = collection(
+          db,
+          "favorites",
+          currentUser.uid,
+          "hotels"
+        );
+
+        const snapshot = await getDocs(favoritesRef);
+
+        const favoriteIds = snapshot.docs.map(
+          (document) => document.id
+        );
+
+        setFavorites(favoriteIds);
+      } catch (error) {
+        console.error("Unable to retrieve favorites:", error);
+      } finally {
+        setAuthLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
   // ----------------------------------------
   // FETCH HOTELS FROM FIRESTORE
   // ----------------------------------------
@@ -285,23 +334,64 @@ export default function PopularHotels() {
     }
   }, []);
 
-  const toggleFavorite = (id) => {
-    setFavorites((previous) => {
-      const updated = previous.includes(id)
-        ? previous.filter((item) => item !== id)
-        : [...previous, id];
+  // ----------------------------------------
+  // ADD OR REMOVE FAVORITES
+  // ----------------------------------------
 
-      try {
-        localStorage.setItem(
-          "hotel-resort-favorites",
-          JSON.stringify(updated)
+  const toggleFavorite = async (hotel) => {
+
+    // User must be authenticated
+    if (!user) {
+      setShowLoginDialog(true);
+      return;
+    }
+
+    if (favoriteLoading) return;
+
+    setFavoriteLoading(true);
+
+    try {
+      const favoriteRef = doc(
+        db,
+        "favorites",
+        user.uid,
+        "hotels",
+        hotel.id
+      );
+
+      const isFavorite = favorites.includes(hotel.id);
+
+      if (isFavorite) {
+
+        // Remove favorite
+        await deleteDoc(favoriteRef);
+
+        setFavorites((previous) =>
+          previous.filter((id) => id !== hotel.id)
         );
-      } catch (err) {
-        console.error("Unable to save favorites:", err);
+
+      } else {
+
+        // Add favorite
+        await setDoc(favoriteRef, {
+          hotelId: hotel.id,
+          hotelName: hotel.name,
+          image: hotel.image,
+          location: hotel.location,
+          createdAt: serverTimestamp(),
+        });
+
+        setFavorites((previous) => [
+          ...previous,
+          hotel.id,
+        ]);
       }
 
-      return updated;
-    });
+    } catch (error) {
+      console.error("Favorite operation failed:", error);
+    } finally {
+      setFavoriteLoading(false);
+    }
   };
 
   // ----------------------------------------
@@ -481,18 +571,15 @@ export default function PopularHotels() {
 
                   <button
                     type="button"
-                    className={`favorite-button ${favorites.includes(hotel.id)
-                        ? "is-favorite"
-                        : ""
+                    className={`favorite-button ${favorites.includes(hotel.id) ? "is-favorite" : ""
                       }`}
                     aria-label={
                       favorites.includes(hotel.id)
                         ? "Remove from favorites"
                         : "Add to favorites"
                     }
-                    onClick={() =>
-                      toggleFavorite(hotel.id)
-                    }
+                    disabled={authLoading || favoriteLoading}
+                    onClick={() => toggleFavorite(hotel)}
                   >
                     <Heart
                       size={19}
@@ -677,7 +764,55 @@ export default function PopularHotels() {
         )}
 
       </div>
+      {/* LOGIN REQUIRED DIALOG */}
 
+      {showLoginDialog && (
+        <div className="favorite-dialog-overlay">
+
+          <div className="favorite-dialog">
+
+            <button
+              type="button"
+              className="favorite-dialog-close"
+              onClick={() => setShowLoginDialog(false)}
+              aria-label="Close dialog"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="favorite-dialog-icon">
+              <Heart size={28} />
+            </div>
+
+            <h3>Sign in to save favorites</h3>
+
+            <p>
+              You need to sign in to your account before
+              you can add hotels to your favorites.
+            </p>
+
+            <div className="favorite-dialog-actions">
+
+              <Link
+                href="/login?redirect=/"
+                className="favorite-login-button"
+              >
+                Sign In
+              </Link>
+
+              <Link
+                href="/register"
+                className="favorite-register-button"
+              >
+                Create Account
+              </Link>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
     </main>
   );
 }

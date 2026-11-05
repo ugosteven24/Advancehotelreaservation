@@ -4,25 +4,11 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  Search,
-  MapPin,
-  CalendarDays,
-  Users,
-  Heart,
-  SlidersHorizontal,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ArrowRight,
-  Waves,
-  Wifi,
-  Utensils,
-  Dumbbell,
-  ShieldCheck,
-  Headset,
-  Star,
-  Menu,
-  X,
+  CircleCheck,
+  BadgeCheck,
+  CircleX,
+  BadgeX,
+  Clock
 } from "lucide-react";
 import ProfileImage from "../component/profileImage";
 import "./profile.css";
@@ -598,7 +584,7 @@ export default function ResortsPage() {
 
   return (
     <main className="resorts-page">
-  
+
 
       <main className="profile-page">
         <header className="page-header">
@@ -696,16 +682,11 @@ export default function ResortsPage() {
               <ul className="verification-list">
                 <li>
                   <span className="verification-info">
-                    <span
-                      className={`material-symbols-outlined ${user.emailVerified
-                        ? "success-icon"
-                        : "pending-icon"
-                        }`}
-                    >
-                      {user.emailVerified
-                        ? "check_circle"
-                        : "pending"}
-                    </span>
+                    {user.emailVerified ? (
+                      <CircleCheck className="success-icon" size={18} />
+                    ) : (
+                      <Clock className="pending-icon" size={18} />
+                    )}
                     Email Address
                   </span>
 

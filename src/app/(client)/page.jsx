@@ -1,34 +1,33 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+
 import {
   collection,
   getDocs,
-  limit,
-  query,
-  startAfter,
 } from "firebase/firestore";
+
 import { db } from "@/firebase/firebase";
+
 import {
   Search,
   MapPin,
   CalendarDays,
   Users,
-  Heart,
-  SlidersHorizontal,
   ChevronDown,
+  ArrowRight,
   Waves,
   Wifi,
   Utensils,
   Dumbbell,
+  Star,
+  LoaderCircle,
 } from "lucide-react";
 
-import PopularDestinations from "@/components/homepage/PopularDestinations"
-import PopularHotels from "@/components/homepage/PopularHotels"
-
-const PAGE_SIZE = 12;
+import PopularDestinations from "@/components/homepage/PopularDestinations";
+import PopularHotels from "@/components/homepage/PopularHotels";
 
 const amenityIcons = {
   Pool: Waves,
@@ -39,182 +38,201 @@ const amenityIcons = {
   "Beach Access": Waves,
 };
 
+// Get today's date using the user's local timezone.
+function getToday() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 function normalizeResort(data, id) {
-  const location = [data.city, data.state, data.country]
+  const location = [
+    data.city,
+    data.state,
+    data.country,
+  ]
     .filter(Boolean)
     .join(", ");
 
-  const rawImages = Array.isArray(data.images) ? data.images : [];
+  const rawImages = Array.isArray(data.images)
+    ? data.images
+    : [];
 
   const image =
     rawImages
-      .map((item) => (typeof item === "string" ? item : item?.url))
+      .map((item) =>
+        typeof item === "string" ? item : item?.url
+      )
       .find(Boolean) ||
     data.image ||
     data.imageUrl ||
     data.photoURL ||
-    data.coverImage
-  "";
+    data.coverImage ||
+    "";
 
   return {
     id,
     name: data.name || data.title || "Unnamed resort",
     location: location || data.address || "Location unavailable",
     country: data.country || "",
+    city: data.city || "",
+    state: data.state || "",
     type: data.type || data.resortType || "",
     price: Number(
-      data.pricePerNight ?? data.price ?? data.nightlyPrice ?? 0
+      data.pricePerNight ??
+      data.price ??
+      data.nightlyPrice ??
+      0
     ),
     rating: Number(data.rating || 0),
     reviews: Number(data.reviews ?? data.reviewCount ?? 0),
     badge: data.badge || "",
     badgeType: data.badgeType || "",
-    amenities: Array.isArray(data.amenities) ? data.amenities : [],
+    amenities: Array.isArray(data.amenities)
+      ? data.amenities
+      : [],
     image,
     status: String(data.status || "active").toLowerCase(),
   };
 }
 
+function getHotelDetailsUrl(resort, searchData) {
+  const params = new URLSearchParams();
+
+  if (searchData.checkIn) {
+    params.set("checkIn", searchData.checkIn);
+  }
+
+  if (searchData.checkOut) {
+    params.set("checkOut", searchData.checkOut);
+  }
+
+  if (searchData.guests) {
+    params.set("guests", searchData.guests);
+  }
+
+  return `/dashboard/hoteldetails/${encodeURIComponent(
+    resort.id
+  )}?${params.toString()}`;
+}
+
 export default function ResortsPage() {
-  const [resorts, setResorts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState("");
-
   const [destination, setDestination] = useState("");
-
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState("2");
 
+  const [resorts, setResorts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const observerRef = useRef(null);
-  const loadingRef = useRef(false);
-  const lastDocumentRef = useRef(null);
-  const hasMoreRef = useRef(true);
+  const [searchData, setSearchData] = useState({
+    destination: "",
+    checkIn: "",
+    checkOut: "",
+    guests: "2",
+  });
 
-  const [hasMore, setHasMore] = useState(true);
+  // Search the hotels collection.
+  async function handleSearch(event) {
+    event.preventDefault();
 
-  // Fetch the first batch or the next batch from Firestore.
-  const fetchResorts = useCallback(async (isInitial = false) => {
-    if (loadingRef.current) return;
-    if (!isInitial && !hasMoreRef.current) return;
-
-    loadingRef.current = true;
     setError("");
 
-    if (isInitial) {
-      setLoading(true);
-      lastDocumentRef.current = null;
-      hasMoreRef.current = true;
-      setHasMore(true);
-    } else {
-      setLoadingMore(true);
+    // Validate dates.
+    if (checkIn && checkOut && checkOut <= checkIn) {
+      setError("Check-out date must be after check-in date.");
+      return;
     }
 
+    if ((checkIn && !checkOut) || (!checkIn && checkOut)) {
+      setError("Please select both check-in and check-out dates.");
+      return;
+    }
+
+    if (checkIn && checkIn < getToday()) {
+      setError("Check-in date cannot be in the past.");
+      return;
+    }
+
+    setLoading(true);
+    setHasSearched(true);
+    setResorts([]);
+
+    const currentSearch = {
+      destination: destination.trim(),
+      checkIn,
+      checkOut,
+      guests,
+    };
+
+    setSearchData(currentSearch);
+
     try {
-      const constraints = [limit(PAGE_SIZE)];
+      // Fetch hotels from Firestore.
+      const hotelsRef = collection(db, "hotels");
+      const snapshot = await getDocs(hotelsRef);
 
-      if (!isInitial && lastDocumentRef.current) {
-        constraints.unshift(startAfter(lastDocumentRef.current));
-      }
-
-      const resortsQuery = query(
-        collection(db, "hotels"),
-        ...constraints
-      );
-
-      const snapshot = await getDocs(resortsQuery);
+      const searchTerm = currentSearch.destination.toLowerCase();
 
       const results = snapshot.docs
         .map((document) =>
           normalizeResort(document.data(), document.id)
         )
-        .filter((resort) => resort.status !== "inactive");
+        .filter((resort) => {
+          // Ignore inactive hotels.
+          if (resort.status === "inactive") {
+            return false;
+          }
 
-      setResorts((previous) => {
-        if (isInitial) return results;
+          // If destination is empty, show all active hotels.
+          if (!searchTerm) {
+            return true;
+          }
 
-        // Prevent duplicates if a document appears in two batches.
-        const existingIds = new Set(previous.map((item) => item.id));
-        return [
-          ...previous,
-          ...results.filter((item) => !existingIds.has(item.id)),
-        ];
-      });
+          // Search hotel name and location.
+          const searchableText = [
+            resort.name,
+            resort.location,
+            resort.city,
+            resort.state,
+            resort.country,
+            resort.type,
+          ]
+            .join(" ")
+            .toLowerCase();
 
-      if (snapshot.docs.length > 0) {
-        lastDocumentRef.current =
-          snapshot.docs[snapshot.docs.length - 1];
-      }
+          return searchableText.includes(searchTerm);
+        });
 
-      const moreAvailable = snapshot.docs.length === PAGE_SIZE;
-      hasMoreRef.current = moreAvailable;
-      setHasMore(moreAvailable);
+      setResorts(results);
     } catch (err) {
-      console.error("Failed to load resorts:", err);
-      setError("Unable to load resorts. Please try again.");
+      console.error("Hotel search failed:", err);
+      setError("Unable to search hotels. Please try again.");
     } finally {
-      loadingRef.current = false;
       setLoading(false);
-      setLoadingMore(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchResorts(true);
-  }, [fetchResorts]);
-
-  // Automatically fetch the next batch when the sentinel enters view.
-  useEffect(() => {
-    const sentinel = observerRef.current;
-
-    if (
-      !sentinel ||
-      loading ||
-      loadingMore ||
-      !hasMore ||
-      error
-    ) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          fetchResorts(false);
-        }
-      },
-      {
-        root: null,
-        rootMargin: "300px",
-        threshold: 0,
-      }
-    );
-
-    observer.observe(sentinel);
-
-    return () => observer.disconnect();
-  }, [fetchResorts, loading, loadingMore, hasMore, error]);
-
-  // Generate filter choices from records already fetched.
-
-
-
-
-
-  function handleSearch(event) {
-    event.preventDefault();
-    setSearchTerm(destination);
   }
 
-  
-
+  // Return to the homepage recommendations.
+  function clearSearch() {
+    setDestination("");
+    setCheckIn("");
+    setCheckOut("");
+    setGuests("2");
+    setResorts([]);
+    setHasSearched(false);
+    setError("");
+  }
 
   return (
-    <main className="">
- 
+    <main>
 
+      {/* Hero section */}
       <section className="resort-hero">
         <div className="hero-overlay" />
 
@@ -237,33 +255,52 @@ export default function ResortsPage() {
         </div>
       </section>
 
-      <section className="resort-search-wrap" id="resort-search">
-        <form className="resort-search" onSubmit={handleSearch}>
+      {/* Search form */}
+      <section
+        className="resort-search-wrap"
+        id="resort-search"
+      >
+        <form
+          className="resort-search"
+          onSubmit={handleSearch}
+        >
+
+          {/* Destination */}
           <label className="search-field destination-field">
             <MapPin size={21} />
+
             <span>
               <strong>Destination</strong>
+
               <input
                 type="text"
-                placeholder="Search resort or destination"
+                placeholder="Hotel, city or destination"
                 value={destination}
-                onChange={(event) => setDestination(event.target.value)}
+                onChange={(event) =>
+                  setDestination(event.target.value)
+                }
               />
             </span>
           </label>
 
+          {/* Check-in */}
           <label className="search-field">
             <CalendarDays size={21} />
+
             <span>
               <strong>Check In</strong>
+
               <input
                 type="date"
-                min={new Date().toISOString().split("T")[0]}
+                min={getToday()}
                 value={checkIn}
                 onChange={(event) => {
                   setCheckIn(event.target.value);
 
-                  if (checkOut && event.target.value > checkOut) {
+                  if (
+                    checkOut &&
+                    event.target.value >= checkOut
+                  ) {
                     setCheckOut("");
                   }
                 }}
@@ -271,26 +308,36 @@ export default function ResortsPage() {
             </span>
           </label>
 
+          {/* Check-out */}
           <label className="search-field">
             <CalendarDays size={21} />
+
             <span>
               <strong>Check Out</strong>
+
               <input
                 type="date"
-                min={checkIn || new Date().toISOString().split("T")[0]}
+                min={checkIn || getToday()}
                 value={checkOut}
-                onChange={(event) => setCheckOut(event.target.value)}
+                onChange={(event) =>
+                  setCheckOut(event.target.value)
+                }
               />
             </span>
           </label>
 
+          {/* Guests */}
           <label className="search-field guests-field">
             <Users size={21} />
+
             <span>
               <strong>Guests</strong>
+
               <select
                 value={guests}
-                onChange={(event) => setGuests(event.target.value)}
+                onChange={(event) =>
+                  setGuests(event.target.value)
+                }
               >
                 <option value="1">1 Guest</option>
                 <option value="2">2 Guests</option>
@@ -300,24 +347,219 @@ export default function ResortsPage() {
                 <option value="6">6 Guests</option>
               </select>
             </span>
+
             <ChevronDown size={15} />
           </label>
 
-          <button className="search-resorts-button" type="submit">
-            <Search size={18} />
-            Search Resorts
+          {/* Submit */}
+          <button
+            className="search-resorts-button"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <LoaderCircle
+                  size={18}
+                  className="animate-spin"
+                />
+                Searching...
+              </>
+            ) : (
+              <>
+                <Search size={18} />
+                Search Resorts
+              </>
+            )}
           </button>
         </form>
+
+        {error && (
+          <p className="search-error" role="alert">
+            {error}
+          </p>
+        )}
       </section>
 
-
       <div className="px-5 lg:px-19">
-        <PopularDestinations />
-        <PopularHotels />
-    
-      </div>
 
-     
+        {/* Search results */}
+        {hasSearched ? (
+          <section className="resorts-results">
+
+            <div className="results-heading">
+              <div>
+                <h2>Search Results</h2>
+
+                <p>
+                  {loading
+                    ? "Searching available hotel records..."
+                    : `${resorts.length} hotels found`}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="view-details-button"
+                onClick={clearSearch}
+              >
+                Clear Search
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="no-resorts">
+                <LoaderCircle
+                  size={32}
+                  className="animate-spin"
+                />
+                <p>Searching hotels...</p>
+              </div>
+            ) : resorts.length > 0 ? (
+              <div className="resorts-grid">
+
+                {resorts.map((resort) => (
+                  <article
+                    className="resort-card"
+                    key={resort.id}
+                  >
+                    <div className="resort-image-wrap">
+
+                      {resort.image ? (
+                        <img
+                          src={resort.image}
+                          alt={resort.name}
+                          className="resort-image"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="resort-no-image">
+                          <Waves size={34} />
+                          <span>No image available</span>
+                        </div>
+                      )}
+
+                      {resort.badge && (
+                        <span
+                          className={`resort-badge ${resort.badgeType}`}
+                        >
+                          {resort.badge}
+                        </span>
+                      )}
+
+                      {resort.rating > 0 && (
+                        <span className="image-rating">
+                          <Star
+                            size={13}
+                            fill="currentColor"
+                          />
+                          {resort.rating}
+                          <span>({resort.reviews})</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="resort-card-body">
+                      <h3>{resort.name}</h3>
+
+                      <p className="resort-location">
+                        <MapPin size={14} />
+                        {resort.location}
+
+                        {resort.type && (
+                          <>
+                            <span>·</span>
+                            {resort.type}
+                          </>
+                        )}
+                      </p>
+
+                      <div className="resort-amenities">
+                        {resort.amenities
+                          .slice(0, 4)
+                          .map((amenity) => {
+                            const Icon =
+                              amenityIcons[amenity] || Waves;
+
+                            return (
+                              <span
+                                key={amenity}
+                                title={amenity}
+                              >
+                                <Icon size={14} />
+                                {amenity}
+                              </span>
+                            );
+                          })}
+                      </div>
+
+                      <div className="resort-card-bottom">
+                        <div className="resort-price">
+                          {resort.price > 0 ? (
+                            <>
+                              <strong>
+                                {resort.price.toLocaleString(
+                                  "en-NG",
+                                  {
+                                    style: "currency",
+                                    currency: "NGN",
+                                    maximumFractionDigits: 0,
+                                  }
+                                )}
+                              </strong>
+                              <span>/ night</span>
+                            </>
+                          ) : (
+                            <span>Price unavailable</span>
+                          )}
+                        </div>
+
+                        <Link
+                          href={getHotelDetailsUrl(
+                            resort,
+                            searchData
+                          )}
+                          className="view-details-button"
+                        >
+                          View Details
+                          <ArrowRight size={15} />
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+
+              </div>
+            ) : (
+              <div className="no-resorts">
+                <Search size={36} />
+
+                <h3>No hotels found</h3>
+
+                <p>
+                  We couldn't find hotels matching your
+                  destination. Try another city or hotel name.
+                </p>
+
+                <button
+                  type="button"
+                  className="view-details-button"
+                  onClick={clearSearch}
+                >
+                  Search Again
+                </button>
+              </div>
+            )}
+
+          </section>
+        ) : (
+          <>
+            <PopularDestinations />
+            <PopularHotels />
+          </>
+        )}
+
+      </div>
     </main>
   );
 }

@@ -1553,7 +1553,7 @@
   margin: 0 0 24px;
 
   padding-bottom: 16px;
-
+   text-align: left;
   color: var(--primary);
 
   font-size: 21px;
@@ -1746,7 +1746,7 @@
 
   .form-grid {
     grid-template-columns: 1fr;
-
+    text-align: left;
     gap: 20px;
   }
 

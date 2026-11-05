@@ -1,36 +1,34 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+
 import {
   collection,
+  deleteDoc,
+  doc,
+  getDoc,
   getDocs,
-  limit,
-  query,
-  startAfter,
 } from "firebase/firestore";
-import { db } from "@/firebase/firebase";
+
+import { onAuthStateChanged } from "firebase/auth";
+
+import { auth, db } from "@/firebase/firebase";
+
 import {
   Search,
   MapPin,
   Heart,
-  SlidersHorizontal,
   ChevronDown,
   ArrowRight,
   Waves,
   Wifi,
   Utensils,
   Dumbbell,
-  ShieldCheck,
-  Headset,
   Star,
-  X,
+  LoaderCircle,
 } from "lucide-react";
-
-
-
-const PAGE_SIZE = 12;
 
 const amenityIcons = {
   Pool: Waves,
@@ -41,22 +39,40 @@ const amenityIcons = {
   "Beach Access": Waves,
 };
 
+function getStarRating(value) {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  const match = String(value || "").match(/\d+/);
+
+  return match ? Number(match[0]) : 0;
+}
+
 function normalizeResort(data, id) {
-  const location = [data.city, data.state, data.country]
+  const location = [
+    data.city,
+    data.state,
+    data.country,
+  ]
     .filter(Boolean)
     .join(", ");
 
-  const rawImages = Array.isArray(data.images) ? data.images : [];
+  const rawImages = Array.isArray(data.images)
+    ? data.images
+    : [];
 
   const image =
     rawImages
-      .map((item) => (typeof item === "string" ? item : item?.url))
+      .map((item) =>
+        typeof item === "string" ? item : item?.url
+      )
       .find(Boolean) ||
     data.image ||
     data.imageUrl ||
     data.photoURL ||
-    data.coverImage
-  "";
+    data.coverImage ||
+    "";
 
   return {
     id,
@@ -69,271 +85,225 @@ function normalizeResort(data, id) {
     reviews: Number(data.reviewCount || 0),
     badge: data.badge || "",
     badgeType: data.badgeType || "",
-    amenities: Array.isArray(data.amenities) ? data.amenities : [],
+    amenities: Array.isArray(data.amenities)
+      ? data.amenities
+      : [],
     image,
     status: String(data.status || "").toLowerCase(),
   };
 }
 
-function getStarRating(value) {
-  if (typeof value === "number") {
-    return value;
-  }
-
-  const match = String(value || "").match(/\d+/);
-  return match ? Number(match[0]) : 0;
-}
 export default function ExplorePage() {
   const [resorts, setResorts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState("");
-
-  const [destination, setDestination] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState("2");
-
-  const [maxPrice, setMaxPrice] = useState(null);
-  const [ratings, setRatings] = useState([]);
-  const [types, setTypes] = useState([]);
-  const [amenities, setAmenities] = useState([]);
-  const [sortBy, setSortBy] = useState("popular");
   const [favorites, setFavorites] = useState([]);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const observerRef = useRef(null);
-  const loadingRef = useRef(false);
-  const lastDocumentRef = useRef(null);
-  const hasMoreRef = useRef(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [user, setUser] = useState(null);
 
-  const [hasMore, setHasMore] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("popular");
 
-  // Fetch the first batch or the next batch from Firestore.
-  const fetchResorts = useCallback(async (isInitial = false) => {
-    if (loadingRef.current) return;
-    if (!isInitial && !hasMoreRef.current) return;
+  const [removingId, setRemovingId] = useState(null);
 
-    loadingRef.current = true;
+  // Fetch the authenticated user's favorite hotels.
+  const fetchFavorites = useCallback(async (userId) => {
+    setLoading(true);
     setError("");
 
-    if (isInitial) {
-      setLoading(true);
-      lastDocumentRef.current = null;
-      hasMoreRef.current = true;
-      setHasMore(true);
-    } else {
-      setLoadingMore(true);
-    }
-
     try {
-      const constraints = [limit(PAGE_SIZE)];
-
-      if (!isInitial && lastDocumentRef.current) {
-        constraints.unshift(startAfter(lastDocumentRef.current));
-      }
-
-      const resortsQuery = query(
-        collection(db, "hotels"),
-        ...constraints
+      const favoritesRef = collection(
+        db,
+        "favorites",
+        userId,
+        "hotels"
       );
 
-      const snapshot = await getDocs(resortsQuery);
+      const favoritesSnapshot = await getDocs(favoritesRef);
 
-      const results = snapshot.docs
-        .map((document) =>
-          normalizeResort(document.data(), document.id)
-        )
-        .filter((resort) => resort.status !== "inactive");
-
-      setResorts((previous) => {
-        if (isInitial) return results;
-
-        // Prevent duplicates if a document appears in two batches.
-        const existingIds = new Set(previous.map((item) => item.id));
-        return [
-          ...previous,
-          ...results.filter((item) => !existingIds.has(item.id)),
-        ];
-      });
-
-      if (snapshot.docs.length > 0) {
-        lastDocumentRef.current =
-          snapshot.docs[snapshot.docs.length - 1];
+      if (favoritesSnapshot.empty) {
+        setFavorites([]);
+        setResorts([]);
+        return;
       }
 
-      const moreAvailable = snapshot.docs.length === PAGE_SIZE;
-      hasMoreRef.current = moreAvailable;
-      setHasMore(moreAvailable);
+      // Get saved hotel IDs from the favorites subcollection.
+      const favoriteIds = favoritesSnapshot.docs.map(
+        (favoriteDoc) => favoriteDoc.id
+      );
+
+      setFavorites(favoriteIds);
+
+      // Retrieve actual hotel documents.
+      const hotelPromises = favoriteIds.map(async (hotelId) => {
+        const hotelRef = doc(db, "hotels", hotelId);
+        const hotelSnapshot = await getDoc(hotelRef);
+
+        if (!hotelSnapshot.exists()) {
+          return null;
+        }
+
+        return normalizeResort(
+          hotelSnapshot.data(),
+          hotelSnapshot.id
+        );
+      });
+
+      const hotels = await Promise.all(hotelPromises);
+
+      const validHotels = hotels.filter(
+        (hotel) => hotel && hotel.status !== "inactive"
+      );
+
+      setResorts(validHotels);
     } catch (err) {
-      console.error("Failed to load resorts:", err);
-      setError("Unable to load resorts. Please try again.");
+      console.error("Failed to fetch favorite hotels:", err);
+      setError("Unable to load your favorite hotels. Please try again.");
     } finally {
-      loadingRef.current = false;
       setLoading(false);
-      setLoadingMore(false);
     }
   }, []);
 
+  // Listen for Firebase authentication changes.
   useEffect(() => {
-    fetchResorts(true);
-  }, [fetchResorts]);
+    let active = true;
 
-  // Automatically fetch the next batch when the sentinel enters view.
-  useEffect(() => {
-    const sentinel = observerRef.current;
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!active) return;
 
-    if (
-      !sentinel ||
-      loading ||
-      loadingMore ||
-      !hasMore ||
-      error
-    ) {
-      return;
-    }
+      setUser(currentUser);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          fetchResorts(false);
-        }
-      },
-      {
-        root: null,
-        rootMargin: "300px",
-        threshold: 0,
+      if (!currentUser) {
+        setFavorites([]);
+        setResorts([]);
+        setLoading(false);
+        return;
       }
-    );
 
-    observer.observe(sentinel);
+      await fetchFavorites(currentUser.uid);
+    });
 
-    return () => observer.disconnect();
-  }, [fetchResorts, loading, loadingMore, hasMore, error]);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [fetchFavorites]);
 
-  // Generate filter choices from records already fetched.
-  const resortTypes = useMemo(
-    () =>
-      [...new Set(resorts.map((resort) => resort.type).filter(Boolean))]
-        .sort(),
-    [resorts]
-  );
-
-  const amenityOptions = useMemo(
-    () =>
-      [...new Set(resorts.flatMap((resort) => resort.amenities))]
-        .filter(Boolean)
-        .sort()
-        .map((value) => ({
-          value,
-          label: value,
-        })),
-    [resorts]
-  );
-
-  const prices = resorts
-    .map((resort) => resort.price)
-    .filter((price) => Number.isFinite(price) && price > 0);
-
-  const minPrice = prices.length
-    ? Math.floor(Math.min(...prices))
-    : 0;
-
-  const highestPrice = prices.length
-    ? Math.ceil(Math.max(...prices))
-    : 0;
-
+  // Search and sort favorite hotels.
   const filteredResorts = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
 
-    const result = resorts.filter((resort) => {
-      const matchesDestination =
+    const results = resorts.filter((resort) => {
+      return (
         !term ||
         resort.name.toLowerCase().includes(term) ||
         resort.location.toLowerCase().includes(term) ||
-        resort.country.toLowerCase().includes(term);
-
-      const matchesPrice =
-        maxPrice === null || resort.price <= maxPrice;
-
-      const matchesRating =
-        ratings.length === 0 ||
-        ratings.some((rating) => resort.rating >= rating);
-
-      const matchesType =
-        types.length === 0 || types.includes(resort.type);
-
-      const matchesAmenities = amenities.every((amenity) =>
-        resort.amenities.includes(amenity)
-      );
-
-      return (
-        matchesDestination &&
-        matchesPrice &&
-        matchesRating &&
-        matchesType &&
-        matchesAmenities
+        resort.country.toLowerCase().includes(term)
       );
     });
 
     if (sortBy === "price-low") {
-      result.sort((a, b) => a.price - b.price);
+      results.sort((a, b) => a.price - b.price);
     } else if (sortBy === "price-high") {
-      result.sort((a, b) => b.price - a.price);
+      results.sort((a, b) => b.price - a.price);
     } else if (sortBy === "rating") {
-      result.sort((a, b) => b.rating - a.rating);
+      results.sort((a, b) => b.rating - a.rating);
     } else {
-      result.sort((a, b) => b.reviews - a.reviews);
+      results.sort((a, b) => b.reviews - a.reviews);
     }
 
-    return result;
-  }, [resorts, searchTerm, maxPrice, ratings, types, amenities, sortBy]);
+    return results;
+  }, [resorts, searchTerm, sortBy]);
 
-  function toggleValue(value, values, setValues) {
-    setValues((previous) =>
-      previous.includes(value)
-        ? previous.filter((item) => item !== value)
-        : [...previous, value]
+  // Remove a hotel from the user's favorites.
+  async function removeFavorite(hotelId) {
+    if (!user || removingId) return;
+
+    setRemovingId(hotelId);
+    setError("");
+
+    try {
+      const favoriteRef = doc(
+        db,
+        "favorites",
+        user.uid,
+        "hotels",
+        hotelId
+      );
+
+      await deleteDoc(favoriteRef);
+
+      setFavorites((previous) =>
+        previous.filter((id) => id !== hotelId)
+      );
+
+      setResorts((previous) =>
+        previous.filter((hotel) => hotel.id !== hotelId)
+      );
+    } catch (err) {
+      console.error("Failed to remove favorite:", err);
+      setError("Unable to remove this hotel from favorites.");
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
+  // Loading state.
+  if (loading) {
+    return (
+      <main className="px-4 lg:px-14 py-11">
+        <div className="no-resorts">
+          <LoaderCircle className="animate-spin" size={30} />
+          <p>Loading your favorite hotels...</p>
+        </div>
+      </main>
     );
   }
 
-  function handleSearch(event) {
-    event.preventDefault();
-    setSearchTerm(destination);
-  }
+  // Authentication state.
+  if (!user) {
+    return (
+      <main className="px-4 lg:px-14 py-11">
+        <div className="no-resorts">
+          <Heart size={36} />
 
-  function clearFilters() {
-    setMaxPrice(null);
-    setRatings([]);
-    setTypes([]);
-    setAmenities([]);
-    setDestination("");
-    setSearchTerm("");
-  }
+          <h3>Sign in to view your favorites</h3>
 
-  function toggleFavorite(id) {
-    setFavorites((previous) =>
-      previous.includes(id)
-        ? previous.filter((item) => item !== id)
-        : [...previous, id]
+          <p>
+            Sign in to your account to see the hotels
+            you have saved.
+          </p>
+
+          <Link
+            href="/login"
+            className="view-details-button"
+          >
+            Sign In
+            <ArrowRight size={15} />
+          </Link>
+        </div>
+      </main>
     );
   }
 
   return (
     <main className="px-4 lg:px-14 py-11">
       <div className="resorts-results">
+
+        {/* Page heading */}
         <div className="results-heading">
           <div>
-            <h2>favorites</h2>
+            <h2>My Favorites</h2>
+
             <p>
-              Showing {filteredResorts.length} matching resorts from{" "}
-              {resorts.length} loaded
+              {filteredResorts.length} favorite hotels
+              {searchTerm ? " found" : " saved"}
             </p>
           </div>
 
           <label className="sort-control">
             <span>Sort by:</span>
+
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
@@ -343,31 +313,49 @@ export default function ExplorePage() {
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
             </select>
+
             <ChevronDown size={15} />
           </label>
         </div>
 
-        {loading ? (
-          <div className="no-resorts">
-            <p>Loading resorts from Firestore...</p>
+        {/* Search */}
+        {resorts.length > 0 && (
+          <div className="favorite-search">
+            <Search size={18} />
+
+            <input
+              type="search"
+              placeholder="Search your favorite hotels..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
           </div>
-        ) : error && resorts.length === 0 ? (
-          <div className="no-resorts">
-            <h3>Unable to load resorts</h3>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <div className="favorite-error" role="alert">
             <p>{error}</p>
+
             <button
               type="button"
-              className="view-details-button"
-              onClick={() => fetchResorts(true)}
+              onClick={() => fetchFavorites(user.uid)}
             >
-              Try Again
+              Retry
             </button>
           </div>
-        ) : filteredResorts.length > 0 ? (
+        )}
+
+        {/* Hotel cards */}
+        {filteredResorts.length > 0 ? (
           <div className="resorts-grid">
             {filteredResorts.map((resort) => (
-              <article className="resort-card" key={resort.id}>
+              <article
+                className="resort-card"
+                key={resort.id}
+              >
                 <div className="resort-image-wrap">
+
                   {resort.image ? (
                     <img
                       src={resort.image}
@@ -390,27 +378,25 @@ export default function ExplorePage() {
                     </span>
                   )}
 
+                  {/* Remove favorite */}
                   <button
                     type="button"
-                    className={`favorite-button ${favorites.includes(resort.id)
-                      ? "is-favorite"
-                      : ""
-                      }`}
-                    aria-label={
-                      favorites.includes(resort.id)
-                        ? "Remove from favorites"
-                        : "Add to favorites"
-                    }
-                    onClick={() => toggleFavorite(resort.id)}
+                    className="favorite-button is-favorite"
+                    aria-label={`Remove ${resort.name} from favorites`}
+                    disabled={removingId === resort.id}
+                    onClick={() => removeFavorite(resort.id)}
                   >
-                    <Heart
-                      size={19}
-                      fill={
-                        favorites.includes(resort.id)
-                          ? "currentColor"
-                          : "none"
-                      }
-                    />
+                    {removingId === resort.id ? (
+                      <LoaderCircle
+                        size={19}
+                        className="animate-spin"
+                      />
+                    ) : (
+                      <Heart
+                        size={19}
+                        fill="currentColor"
+                      />
+                    )}
                   </button>
 
                   {resort.rating > 0 && (
@@ -427,7 +413,9 @@ export default function ExplorePage() {
 
                   <p className="resort-location">
                     <MapPin size={14} />
+
                     {resort.location}
+
                     {resort.type && (
                       <>
                         <span>·</span>
@@ -451,20 +439,25 @@ export default function ExplorePage() {
 
                   <div className="resort-card-bottom">
                     <div className="resort-price">
-                      {/* {resort.price > 0 ? (
+                      {resort.price > 0 ? (
                         <>
                           <strong>
-                            {resort.price.toLocaleString()}
+                            {resort.price.toLocaleString("en-NG", {
+                              style: "currency",
+                              currency: "NGN",
+                              maximumFractionDigits: 0,
+                            })}
                           </strong>
+
                           <span>/ night</span>
                         </>
                       ) : (
                         <span>Price unavailable</span>
-                      )} */}
+                      )}
                     </div>
 
                     <Link
-                      href={`/dashboard/hoteldetails/${resort.id}`}
+                      href={`/dashboard/hoteldetails/${encodeURIComponent(resort.id)}`}
                       className="view-details-button"
                     >
                       View Details
@@ -477,52 +470,48 @@ export default function ExplorePage() {
           </div>
         ) : (
           <div className="no-resorts">
-            <Search size={34} />
-            <h3>No resorts found</h3>
-            <p>
-              {resorts.length === 0
-                ? "No resort records are available in Firestore."
-                : "Try another destination or remove some filters."}
-            </p>
-            <button
-              type="button"
-              className="view-details-button"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </button>
+            {resorts.length === 0 ? (
+              <>
+                <Heart size={38} />
+
+                <h3>No favorite hotels yet</h3>
+
+                <p>
+                  Hotels you save will appear here.
+                  Explore hotels and tap the heart icon
+                  to add them to your favorites.
+                </p>
+
+                <Link
+                  href="/explore"
+                  className="view-details-button"
+                >
+                  Explore Hotels
+                  <ArrowRight size={15} />
+                </Link>
+              </>
+            ) : (
+              <>
+                <Search size={34} />
+
+                <h3>No hotels found</h3>
+
+                <p>
+                  No favorite hotels match your search.
+                </p>
+
+                <button
+                  type="button"
+                  className="view-details-button"
+                  onClick={() => setSearchTerm("")}
+                >
+                  Clear Search
+                </button>
+              </>
+            )}
           </div>
         )}
 
-        {/* Infinite-scroll trigger */}
-        {!loading && !error && hasMore && (
-          <div
-            ref={observerRef}
-            className="infinite-scroll-trigger"
-            aria-live="polite"
-          >
-            {loadingMore && <p>Loading more resorts...</p>}
-          </div>
-        )}
-
-        {error && resorts.length > 0 && (
-          <div className="infinite-scroll-trigger">
-            <p>{error}</p>
-            <button
-              type="button"
-              className="view-details-button"
-              onClick={() => fetchResorts(false)}
-            >
-              Retry Loading
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && !hasMore && resorts.length > 0 && (
-          <div className="infinite-scroll-trigger">
-            <p>You’ve reached the end of the resorts.</p>
-          </div>
-        )}
       </div>
     </main>
   );
